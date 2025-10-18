@@ -3,6 +3,7 @@ import logging
 
 from flask import current_app
 from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler
 
 
 class LogManager:
@@ -15,6 +16,28 @@ class LogManager:
             level=getattr(logging, app.config['LOG_LEVEL']),
             format=app.config['LOG_FORMAT']
         )
+
+        if not app.config['DEBUG'] and not app.config['TESTING']:
+            try:
+                log_folder = app.config['LOG_FOLDER']
+                if not os.path.exists(log_folder):
+                    os.makedirs(log_folder)
+
+                file_handler = RotatingFileHandler(
+                    os.path.join(log_folder, 'flask.log'),
+                    maxBytes=10240,
+                    backupCount=10
+                )
+                file_handler.setFormatter(logging.Formatter(
+                    '%(asctime)s [%(levelname)s] %(message)s (in %(pathname)s:%(lineno)d)'
+                ))
+                file_handler.setLevel(getattr(logging, app.config['LOG_LEVEL']))
+
+                # Add to Flask's app logger specifically
+                app.logger.addHandler(file_handler)
+
+            except Exception as e:
+                logging.error(f"Failed to setup file logging: {str(e)}")
     
     @staticmethod
     def get_application_logs(limit=100, level=None):

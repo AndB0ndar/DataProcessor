@@ -10,12 +10,13 @@ from handlers import register_error_handlers, LogManager
 
 def create_app(config_class=None):
     """Application factory"""
-    app = Flask(__name__)
-    
     # Loading configuration
     if config_class is None:
         config_class = get_config()
-    
+
+    app = Flask(
+        __name__, static_url_path=f'{config_class.APPLICATION_ROOT}/static'
+    )
     app.config.from_object(config_class)
     
     # Initializing configuration
@@ -44,8 +45,8 @@ def register_blueprints(app):
     from routes.api import api_bp
     from routes.website import site_bp
     
-    app.register_blueprint(site_bp)
-    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(site_bp, url_prefix=app.config['APPLICATION_ROOT'])
+    app.register_blueprint(api_bp, url_prefix=f"{app.config['APPLICATION_ROOT']}/api")
 
 
 def register_commands(app):

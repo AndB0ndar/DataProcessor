@@ -13,8 +13,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or '2ecc2d15309dba81fda24721ea014328c3a1de16d8a4964663549c906e825893'
     
     # File folders
+    ROOT_FOLDER = basedir
     UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
     RESULTS_FOLDER = os.path.join(basedir, 'results')
+    LOG_FOLDER = os.path.join(basedir, 'logs')
+
+    APPLICATION_ROOT = os.environ.get('APPLICATION_ROOT', '/')
     
     # File Restrictions
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
@@ -75,9 +79,6 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     
-    # Security in production - check in init_app
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'fallback-secret-key-for-non-prod'
-    
     # Stricter restrictions in production
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB
     MAX_RECORDS_PER_FILE = 50000
@@ -88,16 +89,15 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         """Initialization with verification for production"""
+        # Security in production
         # We check SECRET_KEY only if it is valid in production
-        config_name = os.environ.get('FLASK_CONFIG', 'default')
-        if config_name == 'production':
-            secret_key = os.environ.get('SECRET_KEY')
-            if not secret_key:
-                raise ValueError(
-                    "SECRET_KEY must be set in production environment! "
-                    "Set FLASK_CONFIG=development for development or "
-                    "set SECRET_KEY environment variable for production."
-                )
+        secret_key = os.environ.get('SECRET_KEY')
+        if not secret_key:
+            raise ValueError(
+                "SECRET_KEY must be set in production environment! "
+                "Set FLASK_CONFIG=development for development or "
+                "set SECRET_KEY environment variable for production."
+            )
         
         # Calling the parent init_app
         super(ProductionConfig, cls).init_app(app)
