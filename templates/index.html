@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block hero_title %}Обработка данных{% endblock %}
+{% block hero_description %}Загрузите JSON-файл для запуска процесса обработки{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="upload-container">
+            <div class="upload-header">
+                <h2>Загрузка данных для обработки</h2>
+                <p>Выберите JSON-файл с данными для анализа</p>
+            </div>
+            
+            <div class="upload-content">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="jsonFile" name="file" accept=".json" style="display: none;">
+                        <label for="jsonFile" class="file-label">
+                            <div class="file-icon">📁</div>
+                            <div style="font-size: 1.2rem; color: var(--dark-slate); margin-bottom: 0.5rem;">
+                                Нажмите для выбора JSON-файла
+                            </div>
+                            <div style="color: var(--forest-green);">
+                                Поддерживаются только файлы в формате JSON
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- File Info -->
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <div class="file-details">
+                            <span class="file-name" id="fileName"></span>
+                            <button type="button" class="remove-file" id="removeFile">✕</button>
+                        </div>
+                        <div class="file-size" id="fileSize"></div>
+                    </div>
+
+                    <!-- Validation Messages -->
+                    <div class="validation-message" id="validationMessage"></div>
+
+                    <!-- Action Button -->
+                    <button type="submit" class="action-button" id="runButton" disabled>
+                        Запустить обработку данных
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Features -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Быстрая обработка</h3>
+                <p>Оптимизированные алгоритмы для высокой скорости анализа данных</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Безопасность</h3>
+                <p>Все данные обрабатываются локально и не передаются третьим лицам</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Детальная аналитика</h3>
+                <p>Получите подробные отчеты и визуализации результатов</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const jsonFileInput = document.getElementById('jsonFile');
+    const fileLabel = document.querySelector('.file-label');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFile = document.getElementById('removeFile');
+    const validationMessage = document.getElementById('validationMessage');
+    const runButton = document.getElementById('runButton');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    // File selection handler
+    jsonFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            validateAndDisplayFile(file);
+        }
+    });
+    
+    // Remove file handler
+    removeFile.addEventListener('click', function() {
+        resetFileInput();
+    });
+    
+    // Drag and drop functionality
+    fileLabel.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileLabel.style.borderColor = 'var(--amber)';
+        fileLabel.style.backgroundColor = 'var(--mint)';
+    });
+    
+    fileLabel.addEventListener('dragleave', function() {
+        fileLabel.style.borderColor = 'var(--primary-green)';
+        fileLabel.style.backgroundColor = 'var(--cream)';
+    });
+    
+    fileLabel.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileLabel.style.borderColor = 'var(--primary-green)';
+        fileLabel.style.backgroundColor = 'var(--cream)';
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === 'application/json') {
+            jsonFileInput.files = e.dataTransfer.files;
+            validateAndDisplayFile(file);
+        } else {
+            showValidationMessage('Пожалуйста, выберите файл в формате JSON', 'error');
+        }
+    });
+    
+    // Form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const file = jsonFileInput.files[0];
+        
+        if (file && !runButton.disabled) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                runButton.disabled = true;
+                runButton.textContent = 'Загрузка...';
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showValidationMessage(result.message, 'success');
+                    
+                    // Запуск обработки
+                    const processingResponse = await fetch('/api/start_processing', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            task_id: result.task_id
+                        })
+                    });
+                    
+                    const processingResult = await processingResponse.json();
+                    
+                    if (processingResult.success) {
+                        // Перенаправление на страницу статуса
+                        setTimeout(() => {
+                            window.location.href = '/status';
+                        }, 1000);
+                    }
+                } else {
+                    showValidationMessage(result.error, 'error');
+                    runButton.disabled = false;
+                    runButton.textContent = 'Запустить обработку данных';
+                }
+            } catch (error) {
+                showValidationMessage('Ошибка при загрузке файла', 'error');
+                runButton.disabled = false;
+                runButton.textContent = 'Запустить обработку данных';
+            }
+        }
+    });
+    
+    function validateAndDisplayFile(file) {
+        resetValidation();
+        
+        if (file.type !== 'application/json') {
+            showValidationMessage('Файл должен быть в формате JSON', 'error');
+            return;
+        }
+        
+        if (file.size > 10 * 1024 * 1024) {
+            showValidationMessage('Размер файла не должен превышать 10MB', 'error');
+            return;
+        }
+        
+        // Display file info
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileInfo.style.display = 'block';
+        
+        // Basic validation passed
+        showValidationMessage('Файл прошел базовую проверку', 'success');
+        runButton.disabled = false;
+    }
+    
+    function showValidationMessage(message, type) {
+        validationMessage.textContent = message;
+        validationMessage.style.display = 'block';
+        validationMessage.className = 'validation-message ' + 
+            (type === 'success' ? 'validation-success' : 'validation-error');
+    }
+    
+    function resetValidation() {
+        validationMessage.style.display = 'none';
+        runButton.disabled = true;
+        runButton.textContent = 'Запустить обработку данных';
+    }
+    
+    function resetFileInput() {
+        jsonFileInput.value = '';
+        fileInfo.style.display = 'none';
+        resetValidation();
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.upload-header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--forest-green) 100%);
+    color: var(--cream);
+    padding: 2rem;
+    text-align: center;
+}
+
+.upload-content {
+    padding: 2rem;
+}
+
+.file-input-wrapper {
+    margin-bottom: 2rem;
+}
+
+.file-label {
+    display: block;
+    padding: 3rem 2rem;
+    border: 2px dashed var(--primary-green);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--cream);
+    transition: all 0.3s ease;
+}
+
+.file-label:hover {
+    border-color: var(--amber);
+    background-color: var(--mint);
+}
+
+.file-icon {
+    font-size: 3rem;
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+}
+
+.file-info {
+    background-color: var(--mint);
+    padding: 1.5rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.file-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.file-name {
+    font-weight: bold;
+    color: var(--dark-slate);
+}
+
+.file-size {
+    color: var(--forest-green);
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: var(--accent-orange);
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.validation-message {
+    display: none;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.validation-success {
+    background-color: var(--mint);
+    color: var(--forest-green);
+}
+
+.validation-error {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.action-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--accent-orange);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.action-button:disabled {
+    background-color: var(--light-gray);
+    cursor: not-allowed;
+}
+
+.action-button:hover:not(:disabled) {
+    background-color: var(--forest-green);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .upload-content {
+        padding: 1rem;
+    }
+    
+    .file-label {
+        padding: 2rem 1rem;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

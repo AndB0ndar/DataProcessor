@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}Страница статуса{% endblock %}
+
+{% block hero_title %}Статус выполнения программы{% endblock %}
+{% block hero_description %}Отслеживание прогресса обработки данных в реальном времени{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="status-container">
+            <div class="status-header">
+                <h2>Обработка данных</h2>
+                <div class="status-indicator status-processing" id="statusIndicator">
+                    <span id="statusText">В процессе</span>
+                </div>
+            </div>
+            
+            <div class="status-content">
+                <!-- Progress Section -->
+                <div class="progress-section">
+                    <div class="progress-info">
+                        <span>Общий прогресс</span>
+                        <span id="overallPercent">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="overallProgressBar"></div>
+                    </div>
+                    <div class="phase-info">
+                        Текущий этап: <span id="currentPhase">Инициализация...</span>
+                    </div>
+                </div>
+                
+                <!-- Timer Section -->
+                <div class="timer-section">
+                    <div>Время выполнения:</div>
+                    <div class="timer" id="executionTimer">00:00:00</div>
+                </div>
+                
+                <!-- Phase List -->
+                <div class="phase-list">
+                    <div class="phase-item completed" id="phase1">
+                        <div class="phase-icon completed">✓</div>
+                        <div class="phase-details">
+                            <div class="phase-name">Загрузка файла</div>
+                            <div class="phase-description">Проверка формата и структуры JSON</div>
+                        </div>
+                        <div class="phase-percent">100%</div>
+                    </div>
+                    
+                    <div class="phase-item active" id="phase2">
+                        <div class="phase-icon active">⟳</div>
+                        <div class="phase-details">
+                            <div class="phase-name">Анализ входных данных</div>
+                            <div class="phase-description">Парсинг и валидация структуры данных</div>
+                        </div>
+                        <div class="phase-percent" id="phase2Percent">65%</div>
+                    </div>
+                    
+                    <div class="phase-item pending" id="phase3">
+                        <div class="phase-icon pending">…</div>
+                        <div class="phase-details">
+                            <div class="phase-name">Обработка данных</div>
+                            <div class="phase-description">Применение алгоритмов анализа</div>
+                        </div>
+                        <div class="phase-percent">0%</div>
+                    </div>
+                    
+                    <div class="phase-item pending" id="phase4">
+                        <div class="phase-icon pending">…</div>
+                        <div class="phase-details">
+                            <div class="phase-name">Формирование отчета</div>
+                            <div class="phase-description">Создание итоговых результатов</div>
+                        </div>
+                        <div class="phase-percent">0%</div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="actions">
+                    <button class="btn" id="pauseResumeBtn">Приостановить</button>
+                    <button class="btn btn-secondary" id="cancelBtn">Отменить</button>
+                </div>
+                
+                <!-- Log Section -->
+                <div class="log-section">
+                    <div class="log-header">
+                        <span>Журнал выполнения</span>
+                        <button id="clearLogBtn" style="background: none; border: none; color: white; cursor: pointer;">Очистить</button>
+                    </div>
+                    <div class="log-content" id="logContent">
+                        <div class="log-entry">
+                            <span class="log-time">[10:23:15]</span>
+                            <span class="log-message">Запуск процесса обработки данных...</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[10:23:16]</span>
+                            <span class="log-success">Файл успешно загружен и проверен</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[10:23:17]</span>
+                            <span class="log-message">Начало анализа входных данных...</span>
+                        </div>
+                        <div class="log-entry">
+                            <span class="log-time">[10:23:45]</span>
+                            <span class="log-message">Обработано 65% данных...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Элементы DOM
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const overallProgressBar = document.getElementById('overallProgressBar');
+        const overallPercent = document.getElementById('overallPercent');
+        const currentPhase = document.getElementById('currentPhase');
+        const executionTimer = document.getElementById('executionTimer');
+        const pauseResumeBtn = document.getElementById('pauseResumeBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const logContent = document.getElementById('logContent');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        
+        // Переменные состояния
+        let startTime = new Date();
+        let timerInterval;
+        let isPaused = false;
+        let progressInterval;
+        let currentProgress = 0;
+        let phase2Progress = 65;
+        let phase3Progress = 0;
+        let phase4Progress = 0;
+        
+        // Инициализация таймера
+        function startTimer() {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        function updateTimer() {
+            if (isPaused) return;
+            
+            const now = new Date();
+            const diff = now - startTime;
+            
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            executionTimer.textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Имитация прогресса
+        function startProgressSimulation() {
+            progressInterval = setInterval(updateProgress, 1500);
+        }
+        
+        function updateProgress() {
+            if (isPaused) return;
+            
+            // Обновление прогресса фазы 2
+            if (phase2Progress < 100) {
+                phase2Progress += Math.floor(Math.random() * 10) + 5;
+                if (phase2Progress > 100) phase2Progress = 100;
+                
+                document.getElementById('phase2Percent').textContent = `${phase2Progress}%`;
+                
+                if (phase2Progress === 100) {
+                    completePhase('phase2');
+                    startPhase('phase3');
+                    addLogEntry('Анализ входных данных завершен', 'success');
+                    addLogEntry('Начало обработки данных...');
+                }
+            }
+            // Обновление прогресса фазы 3
+            else if (phase3Progress < 100) {
+                phase3Progress += Math.floor(Math.random() * 8) + 3;
+                if (phase3Progress > 100) phase3Progress = 100;
+                
+                document.getElementById('phase3').querySelector('.phase-percent').textContent = `${phase3Progress}%`;
+                
+                if (phase3Progress === 100) {
+                    completePhase('phase3');
+                    startPhase('phase4');
+                    addLogEntry('Обработка данных завершена', 'success');
+                    addLogEntry('Формирование отчета...');
+                }
+            }
+            // Обновление прогресса фазы 4
+            else if (phase4Progress < 100) {
+                phase4Progress += Math.floor(Math.random() * 15) + 10;
+                if (phase4Progress > 100) phase4Progress = 100;
+                
+                document.getElementById('phase4').querySelector('.phase-percent').textContent = `${phase4Progress}%`;
+                
+                if (phase4Progress === 100) {
+                    completePhase('phase4');
+                    finishProcessing();
+                }
+            }
+            
+            // Расчет общего прогресса
+            const totalPhases = 4; // всего фаз
+            const completedPhases = 
+                (phase2Progress === 100 ? 1 : 0) + 
+                (phase3Progress === 100 ? 1 : 0) + 
+                (phase4Progress === 100 ? 1 : 0);
+            
+            const phaseProgress = 
+                (phase2Progress === 100 ? 100 : phase2Progress) +
+                (phase3Progress === 100 ? 100 : phase3Progress) +
+                (phase4Progress === 100 ? 100 : phase4Progress);
+            
+            currentProgress = Math.min(100, (completedPhases * 100 + phaseProgress) / (totalPhases * 100) * 100);
+            
+            // Обновление общего прогресса
+            overallProgressBar.style.width = `${currentProgress}%`;
+            overallPercent.textContent = `${Math.round(currentProgress)}%`;
+            
+            // Обновление текущей фазы
+            if (phase2Progress < 100) {
+                currentPhase.textContent = `Анализ входных данных (${phase2Progress}% завершено)`;
+            } else if (phase3Progress < 100) {
+                currentPhase.textContent = `Обработка данных (${phase3Progress}% завершено)`;
+            } else if (phase4Progress < 100) {
+                currentPhase.textContent = `Формирование отчета (${phase4Progress}% завершено)`;
+            }
+        }
+        
+        function startPhase(phaseId) {
+            const phaseElement = document.getElementById(phaseId);
+            phaseElement.classList.remove('pending');
+            phaseElement.classList.add('active');
+            
+            const phaseIcon = phaseElement.querySelector('.phase-icon');
+            phaseIcon.classList.remove('pending');
+            phaseIcon.classList.add('active');
+            phaseIcon.textContent = '⟳';
+        }
+        
+        function completePhase(phaseId) {
+            const phaseElement = document.getElementById(phaseId);
+            phaseElement.classList.remove('active');
+            phaseElement.classList.add('completed');
+            
+            const phaseIcon = phaseElement.querySelector('.phase-icon');
+            phaseIcon.classList.remove('active');
+            phaseIcon.classList.add('completed');
+            phaseIcon.textContent = '✓';
+        }
+        
+        function finishProcessing() {
+            clearInterval(progressInterval);
+            clearInterval(timerInterval);
+            
+            statusIndicator.className = 'status-indicator status-completed';
+            statusText.textContent = 'Завершено';
+            
+            pauseResumeBtn.disabled = true;
+            cancelBtn.disabled = true;
+            
+            addLogEntry('Обработка данных успешно завершена!', 'success');
+            
+            // Показать уведомление о завершении
+            setTimeout(() => {
+                alert('Обработка данных завершена успешно!');
+            }, 500);
+        }
+        
+        function addLogEntry(message, type = 'info') {
+            const now = new Date();
+            const timeString = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = timeString;
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.className = type === 'error' ? 'log-error' : 
+                                   type === 'success' ? 'log-success' : 'log-message';
+            messageSpan.textContent = message;
+            
+            logEntry.appendChild(timeSpan);
+            logEntry.appendChild(messageSpan);
+            
+            logContent.appendChild(logEntry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        // Обработчики событий
+        pauseResumeBtn.addEventListener('click', function() {
+            isPaused = !isPaused;
+            
+            if (isPaused) {
+                pauseResumeBtn.textContent = 'Продолжить';
+                statusIndicator.className = 'status-indicator status-pending';
+                statusText.textContent = 'Приостановлено';
+                addLogEntry('Обработка приостановлена');
+            } else {
+                pauseResumeBtn.textContent = 'Приостановить';
+                statusIndicator.className = 'status-indicator status-processing';
+                statusText.textContent = 'В процессе';
+                addLogEntry('Обработка возобновлена');
+            }
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('Вы уверены, что хотите отменить обработку? Все несохраненные данные будут потеряны.')) {
+                clearInterval(progressInterval);
+                clearInterval(timerInterval);
+                
+                statusIndicator.className = 'status-indicator status-error';
+                statusText.textContent = 'Отменено';
+                
+                pauseResumeBtn.disabled = true;
+                cancelBtn.disabled = true;
+                
+                addLogEntry('Обработка отменена пользователем', 'error');
+            }
+        });
+        
+        clearLogBtn.addEventListener('click', function() {
+            logContent.innerHTML = '';
+            addLogEntry('Журнал очищен');
+        });
+        
+        // Запуск процессов
+        startTimer();
+        startProgressSimulation();
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Дополнительные стили для страницы статуса */
+    .status-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .status-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--forest-green) 100%);
+        color: var(--cream);
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .status-content {
+        padding: 2rem;
+    }
+    
+    .progress-section {
+        margin-bottom: 2.5rem;
+    }
+    
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: var(--dark-slate);
+    }
+    
+    .progress-bar-container {
+        height: 12px;
+        background-color: var(--light-gray);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--amber) 0%, var(--accent-orange) 100%);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+    
+    .phase-info {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: var(--forest-green);
+    }
+    
+    .timer-section {
+        text-align: center;
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background-color: var(--cream);
+        border-radius: 8px;
+    }
+    
+    .timer {
+        font-family: 'Courier New', monospace;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--dark-slate);
+        margin: 1rem 0;
+    }
+    
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .status-pending {
+        background-color: var(--light-gray);
+        color: var(--dark-slate);
+    }
+    
+    .status-processing {
+        background-color: var(--amber);
+        color: var(--deep-navy);
+    }
+    
+    .status-completed {
+        background-color: var(--forest-green);
+        color: white;
+    }
+    
+    .status-error {
+        background-color: #e74c3c;
+        color: white;
+    }
+    
+    .phase-list {
+        margin-top: 2rem;
+    }
+    
+    .phase-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-left: 4px solid var(--light-gray);
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .phase-item.active {
+        border-left-color: var(--amber);
+        background-color: rgba(245, 158, 11, 0.1);
+    }
+    
+    .phase-item.completed {
+        border-left-color: var(--forest-green);
+        background-color: rgba(46, 139, 87, 0.1);
+    }
+    
+    .phase-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .phase-icon.pending {
+        background-color: var(--light-gray);
+        color: var(--dark-slate);
+    }
+    
+    .phase-icon.active {
+        background-color: var(--amber);
+        color: white;
+    }
+    
+    .phase-icon.completed {
+        background-color: var(--forest-green);
+        color: white;
+    }
+    
+    .phase-details {
+        flex-grow: 1;
+    }
+    
+    .phase-name {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    
+    .phase-description {
+        font-size: 0.85rem;
+        color: var(--dark-slate);
+    }
+    
+    .phase-percent {
+        font-weight: bold;
+        color: var(--forest-green);
+        margin-left: 1rem;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .btn-secondary {
+        background-color: var(--dark-slate);
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: var(--deep-navy);
+    }
+    
+    .log-section {
+        margin-top: 2rem;
+        background-color: var(--light-gray);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .log-header {
+        padding: 1rem;
+        background-color: var(--dark-slate);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .log-content {
+        padding: 1rem;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+    
+    .log-entry {
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .log-time {
+        color: var(--forest-green);
+        margin-right: 0.5rem;
+    }
+    
+    .log-message {
+        color: var(--deep-navy);
+    }
+    
+    .log-error {
+        color: #e74c3c;
+    }
+    
+    .log-success {
+        color: var(--forest-green);
+    }
+</style>
+{% endblock %}

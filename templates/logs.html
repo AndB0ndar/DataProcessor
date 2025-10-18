@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+
+{% block title %}Страница логов{% endblock %}
+
+{% block hero_title %}Логи выполнения программы{% endblock %}
+{% block hero_description %}Детальная информация о процессе обработки данных{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="logs-container">
+            <div class="logs-header">
+                <h2>Журнал выполнения</h2>
+                <p>Сессия: Обработка данных от 15.01.2024</p>
+            </div>
+            
+            <div class="logs-controls">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <span style="margin-right: 0.5rem;">Уровень:</span>
+                        <button class="filter-btn active" data-level="all">Все</button>
+                        <button class="filter-btn" data-level="info">INFO</button>
+                        <button class="filter-btn" data-level="warning">WARNING</button>
+                        <button class="filter-btn" data-level="error">ERROR</button>
+                        <button class="filter-btn" data-level="debug">DEBUG</button>
+                    </div>
+                    
+                    <input type="text" class="search-box" id="searchLogs" placeholder="Поиск в логах...">
+                    
+                    <div class="auto-scroll">
+                        <input type="checkbox" class="auto-scroll-checkbox" id="autoScroll" checked>
+                        <label for="autoScroll">Автопрокрутка</label>
+                    </div>
+                </div>
+                
+                <div class="action-controls">
+                    <button class="btn" id="clearLogsBtn">Очистить логи</button>
+                    <button class="btn btn-secondary" id="exportLogsBtn">Экспорт логов</button>
+                </div>
+            </div>
+            
+            <div class="logs-content" id="logsContent">
+                <!-- Логи будут добавляться здесь динамически -->
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-value info-count" id="infoCount">24</div>
+                    <div class="stat-info">INFO сообщений</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value warning-count" id="warningCount">7</div>
+                    <div class="stat-info">WARNING сообщений</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value error-count" id="errorCount">2</div>
+                    <div class="stat-info">ERROR сообщений</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value debug-count" id="debugCount">15</div>
+                    <div class="stat-info">DEBUG сообщений</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Instructions -->
+        <div style="margin-top: 2rem; background-color: var(--cream); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="color: var(--dark-slate); margin-bottom: 1rem;">Информация о логах</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div>
+                    <h4 style="color: var(--forest-green); margin-bottom: 0.5rem;">Уровни логов</h4>
+                    <ul style="color: var(--deep-navy); line-height: 1.6;">
+                        <li><strong>INFO</strong> - Информационные сообщения о ходе выполнения</li>
+                        <li><strong>WARNING</strong> - Предупреждения о потенциальных проблемах</li>
+                        <li><strong>ERROR</strong> - Критические ошибки выполнения</li>
+                        <li><strong>DEBUG</strong> - Отладочная информация для разработчиков</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--forest-green); margin-bottom: 0.5rem;">Функции</h4>
+                    <ul style="color: var(--deep-navy); line-height: 1.6;">
+                        <li>Фильтрация логов по уровню важности</li>
+                        <li>Поиск по содержимому логов</li>
+                        <li>Автоматическая прокрутка к новым сообщениям</li>
+                        <li>Экспорт логов в формате TXT или JSON</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Элементы DOM
+        const logsContent = document.getElementById('logsContent');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchLogs = document.getElementById('searchLogs');
+        const autoScrollCheckbox = document.getElementById('autoScroll');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const exportLogsBtn = document.getElementById('exportLogsBtn');
+        
+        // Статистика
+        const infoCount = document.getElementById('infoCount');
+        const warningCount = document.getElementById('warningCount');
+        const errorCount = document.getElementById('errorCount');
+        const debugCount = document.getElementById('debugCount');
+        
+        // Переменные состояния
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let autoScrollEnabled = true;
+        let logEntries = [];
+        let logCounters = {
+            info: 0,
+            warning: 0,
+            error: 0,
+            debug: 0
+        };
+        
+        // Пример логов для демонстрации
+        const sampleLogs = [
+            { level: 'info', message: 'Загрузка JSON-файла началась', timestamp: '2024-01-15 10:23:15', details: '' },
+            { level: 'info', message: 'Файл успешно загружен: data_analysis.json', timestamp: '2024-01-15 10:23:16', details: 'Размер файла: 245 КБ' },
+            { level: 'debug', message: 'Проверка структуры JSON', timestamp: '2024-01-15 10:23:17', details: '' },
+            { level: 'warning', message: 'Недостающее поле "timestamp" в JSON', timestamp: '2024-01-15 10:23:18', details: 'Используется значение по умолчанию' },
+            { level: 'info', message: 'Валидация схемы JSON завершена', timestamp: '2024-01-15 10:23:20', details: '' },
+            { level: 'info', message: 'Начало парсинга данных', timestamp: '2024-01-15 10:23:21', details: '' },
+            { level: 'debug', message: 'Обработка массива данных', timestamp: '2024-01-15 10:23:25', details: 'Найдено 147 записей' },
+            { level: 'info', message: 'Парсинг данных завершен', timestamp: '2024-01-15 10:23:45', details: 'Успешно обработано 145 записей' },
+            { level: 'warning', message: '2 записи пропущены из-за неверного формата', timestamp: '2024-01-15 10:23:46', details: 'ID записей: 34, 78' },
+            { level: 'info', message: 'Запуск алгоритма анализа', timestamp: '2024-01-15 10:23:47', details: '' },
+            { level: 'debug', message: 'Выполнение фазы 1 анализа', timestamp: '2024-01-15 10:24:05', details: 'Прогресс: 25%' },
+            { level: 'debug', message: 'Выполнение фазы 2 анализа', timestamp: '2024-01-15 10:24:35', details: 'Прогресс: 50%' },
+            { level: 'error', message: 'Ошибка в модуле парсинга', timestamp: '2024-01-15 10:24:50', details: 'Исключение: NullReferenceException в строке 245' },
+            { level: 'info', message: 'Повторная попытка обработки', timestamp: '2024-01-15 10:24:52', details: '' },
+            { level: 'debug', message: 'Выполнение фазы 3 анализа', timestamp: '2024-01-15 10:25:15', details: 'Прогресс: 75%' },
+            { level: 'info', message: 'Анализ данных завершен', timestamp: '2024-01-15 10:25:45', details: '' },
+            { level: 'info', message: 'Формирование отчета', timestamp: '2024-01-15 10:25:46', details: '' },
+            { level: 'debug', message: 'Создание визуализаций', timestamp: '2024-01-15 10:26:10', details: 'Сгенерировано 5 графиков' },
+            { level: 'info', message: 'Отчет успешно создан', timestamp: '2024-01-15 10:26:35', details: 'Файл: report_20240115_102635.pdf' },
+            { level: 'warning', message: 'Некоторые данные не были включены в отчет', timestamp: '2024-01-15 10:26:36', details: 'Причина: превышение лимита страниц' },
+            { level: 'info', message: 'Процесс обработки завершен', timestamp: '2024-01-15 10:26:37', details: 'Общее время выполнения: 00:03:22' }
+        ];
+        
+        // Инициализация логов
+        function initializeLogs() {
+            logEntries = [...sampleLogs];
+            updateLogCounters();
+            renderLogs();
+            
+            // Имитация добавления новых логов в реальном времени
+            setTimeout(addRandomLog, 5000);
+        }
+        
+        // Добавление случайного лога
+        function addRandomLog() {
+            const levels = ['info', 'warning', 'error', 'debug'];
+            const messages = [
+                'Проверка целостности данных',
+                'Оптимизация использования памяти',
+                'Кэширование промежуточных результатов',
+                'Экспорт данных во внешнюю систему',
+                'Очистка временных файлов'
+            ];
+            
+            const level = levels[Math.floor(Math.random() * levels.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            const now = new Date();
+            const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            
+            addLogEntry(level, message, timestamp, '');
+            
+            // Планируем следующее добавление через случайный интервал
+            setTimeout(addRandomLog, Math.random() * 10000 + 5000);
+        }
+        
+        // Добавление записи в лог
+        function addLogEntry(level, message, timestamp, details) {
+            const logEntry = { level, message, timestamp, details };
+            logEntries.push(logEntry);
+            logCounters[level]++;
+            updateLogCounters();
+            
+            if (shouldDisplayLog(logEntry)) {
+                renderLogEntry(logEntry);
+            }
+            
+            if (autoScrollEnabled) {
+                logsContent.scrollTop = logsContent.scrollHeight;
+            }
+        }
+        
+        // Обновление счетчиков логов
+        function updateLogCounters() {
+            infoCount.textContent = logCounters.info;
+            warningCount.textContent = logCounters.warning;
+            errorCount.textContent = logCounters.error;
+            debugCount.textContent = logCounters.debug;
+        }
+        
+        // Отрисовка всех логов
+        function renderLogs() {
+            logsContent.innerHTML = '';
+            
+            if (logEntries.length === 0) {
+                logsContent.innerHTML = '<div class="empty-logs">Логи отсутствуют</div>';
+                return;
+            }
+            
+            logEntries.forEach(logEntry => {
+                if (shouldDisplayLog(logEntry)) {
+                    renderLogEntry(logEntry);
+                }
+            });
+            
+            if (autoScrollEnabled) {
+                logsContent.scrollTop = logsContent.scrollHeight;
+            }
+        }
+        
+        // Отрисовка одной записи лога
+        function renderLogEntry(logEntry) {
+            const logElement = document.createElement('div');
+            logElement.className = 'log-entry';
+            logElement.dataset.level = logEntry.level;
+            
+            // Подсветка поискового запроса
+            let displayMessage = logEntry.message;
+            if (currentSearch) {
+                const regex = new RegExp(`(${currentSearch})`, 'gi');
+                displayMessage = displayMessage.replace(regex, '<span class="highlight">$1</span>');
+            }
+            
+            logElement.innerHTML = `
+                <div class="log-timestamp">${logEntry.timestamp}</div>
+                <div class="log-level level-${logEntry.level}">${logEntry.level.toUpperCase()}</div>
+                <div class="log-message">${displayMessage}</div>
+            `;
+            
+            if (logEntry.details) {
+                const detailsElement = document.createElement('div');
+                detailsElement.className = 'log-details';
+                detailsElement.textContent = logEntry.details;
+                logElement.appendChild(detailsElement);
+            }
+            
+            logsContent.appendChild(logElement);
+        }
+        
+        // Проверка, должна ли запись отображаться
+        function shouldDisplayLog(logEntry) {
+            // Проверка фильтра по уровню
+            if (currentFilter !== 'all' && logEntry.level !== currentFilter) {
+                return false;
+            }
+            
+            // Проверка поискового запроса
+            if (currentSearch && 
+                !logEntry.message.toLowerCase().includes(currentSearch.toLowerCase()) &&
+                !logEntry.details.toLowerCase().includes(currentSearch.toLowerCase())) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Обработчики событий
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentFilter = this.dataset.level;
+                renderLogs();
+            });
+        });
+        
+        searchLogs.addEventListener('input', function() {
+            currentSearch = this.value;
+            renderLogs();
+        });
+        
+        autoScrollCheckbox.addEventListener('change', function() {
+            autoScrollEnabled = this.checked;
+        });
+        
+        clearLogsBtn.addEventListener('click', function() {
+            if (confirm('Вы уверены, что хотите очистить все логи?')) {
+                logEntries = [];
+                logCounters = { info: 0, warning: 0, error: 0, debug: 0 };
+                updateLogCounters();
+                renderLogs();
+            }
+        });
+        
+        exportLogsBtn.addEventListener('click', function() {
+            const format = confirm('Нажмите OK для экспорта в формате JSON, Отмена для формата TXT') ? 'json' : 'txt';
+            exportLogs(format);
+        });
+        
+        // Экспорт логов
+        function exportLogs(format) {
+            let content = '';
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            
+            if (format === 'json') {
+                content = JSON.stringify(logEntries, null, 2);
+            } else {
+                content = logEntries.map(entry => 
+                    `${entry.timestamp} [${entry.level.toUpperCase()}] ${entry.message}${entry.details ? ' - ' + entry.details : ''}`
+                ).join('\n');
+            }
+            
+            const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs_${timestamp}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Инициализация
+        initializeLogs();
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Дополнительные стили для страницы логов */
+    .logs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .logs-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--forest-green) 100%);
+        color: var(--cream);
+        padding: 1.5rem;
+    }
+    
+    .logs-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: var(--light-gray);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--dark-slate);
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-btn.active {
+        background-color: var(--dark-slate);
+        color: white;
+    }
+    
+    .search-box {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--dark-slate);
+        border-radius: 4px;
+        width: 250px;
+    }
+    
+    .action-controls {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .logs-content {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        background-color: var(--deep-navy);
+        color: var(--cream);
+    }
+    
+    .log-entry {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .log-timestamp {
+        color: var(--mint);
+        min-width: 120px;
+        margin-right: 1rem;
+    }
+    
+    .log-level {
+        min-width: 80px;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+        text-align: center;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    
+    .level-info {
+        background-color: var(--primary-green);
+        color: var(--deep-navy);
+    }
+    
+    .level-warning {
+        background-color: var(--amber);
+        color: var(--deep-navy);
+    }
+    
+    .level-error {
+        background-color: #e74c3c;
+        color: white;
+    }
+    
+    .level-debug {
+        background-color: var(--dark-slate);
+        color: white;
+    }
+    
+    .log-message {
+        flex-grow: 1;
+        word-break: break-all;
+    }
+    
+    .log-details {
+        margin-top: 0.25rem;
+        font-size: 0.8rem;
+        color: var(--mint);
+        padding-left: 2rem;
+    }
+    
+    .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1.5rem;
+        background-color: var(--cream);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-info {
+        font-size: 0.9rem;
+        color: var(--dark-slate);
+    }
+    
+    .info-count { color: var(--primary-green); }
+    .warning-count { color: var(--amber); }
+    .error-count { color: #e74c3c; }
+    .debug-count { color: var(--dark-slate); }
+    
+    .auto-scroll {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    
+    .auto-scroll-checkbox {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .highlight {
+        background-color: rgba(245, 158, 11, 0.3);
+        padding: 0 2px;
+        border-radius: 2px;
+    }
+    
+    .empty-logs {
+        text-align: center;
+        padding: 2rem;
+        color: var(--mint);
+        font-style: italic;
+    }
+    
+    .log-entry.hidden {
+        display: none;
+    }
+</style>
+{% endblock %}

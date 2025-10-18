@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Доступ запрещен{% endblock %}
+
+{% block hero_title %}403 - Доступ запрещен{% endblock %}
+{% block hero_description %}У вас нет прав для доступа к этому ресурсу{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 1rem;">🚫</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Доступ запрещен</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                У вас недостаточно прав для доступа к запрашиваемому ресурсу.
+            </p>
+            <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="color: var(--dark-slate); margin: 0;">
+                    Если вы считаете, что это ошибка, обратитесь к администратору системы.
+                </p>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.index') }}" class="btn">На главную</a>
+                <a href="{{ url_for('website.help') }}" class="btn btn-secondary">Справка</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Ошибка обработки{% endblock %}
+
+{% block hero_title %}Ошибка обработки данных{% endblock %}
+{% block hero_description %}Произошла ошибка во время обработки ваших данных{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 1rem;">⚡</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Ошибка обработки данных</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                {{ message }}
+            </p>
+            <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="color: var(--dark-slate); margin: 0;">
+                    <strong>Что можно сделать:</strong>
+                </p>
+                <ul style="text-align: left; color: var(--dark-slate); margin: 1rem 0;">
+                    <li>Проверить корректность исходных данных</li>
+                    <li>Убедиться, что файл не поврежден</li>
+                    <li>Попробовать обработать файл еще раз</li>
+                    <li>Обратиться в техническую поддержку, если проблема повторяется</li>
+                </ul>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.index') }}" class="btn">На главную</a>
+                <a href="{{ url_for('website.logs') }}" class="btn btn-secondary">Просмотреть логи</a>
+                <button onclick="location.reload()" class="btn" style="background-color: var(--dark-slate);">
+                    Попробовать снова
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
