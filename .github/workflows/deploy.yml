@@ -12,7 +12,6 @@ env:
   VENV_PATH: /var/www/arbond.ru/venv
 
 jobs:
-  test:
   deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
