@@ -7,28 +7,28 @@ logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):
-    """Кастомное исключение для ошибок валидации"""
+    """Custom exception for validation errors"""
     def __init__(self, message, status_code=400):
         super().__init__()
-        self.message = message
+        self.message =message
         self.status_code = status_code
 
 
 class ProcessingError(Exception):
-    """Кастомное исключение для ошибок обработки"""
+    """Custom exception for processing errors"""
     def __init__(self, message, status_code=500):
         super().__init__()
-        self.message = message
+        self.message =message
         self.status_code = status_code
 
 
 def register_error_handlers(app):
-    """Регистрация всех обработчиков ошибок в приложении"""
+    """Registration of all error handlers in the app"""
     
     @app.errorhandler(400)
     def bad_request_error(error):
-        """Ошибка 400 - Неверный запрос"""
-        logger.warning(f'Bad request: {error}')
+        """Error 400 - Invalid request"""
+        logger.warning(f'bad request: {error}')
         
         if request.is_json:
             return jsonify({
@@ -41,8 +41,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(403)
     def forbidden_error(error):
-        """Ошибка 403 - Доступ запрещен"""
-        logger.warning(f'Forbidden access: {error}')
+        """Error 403 - Access denied"""
+        logger.warning(f' Forbidden access: {error}')
         
         if request.is_json:
             return jsonify({
@@ -55,9 +55,9 @@ def register_error_handlers(app):
 
     @app.errorhandler(404)
     def not_found_error(error):
-        """Ошибка 404 - Ресурс не найден"""
-        logger.info(f'Resource not found: {request.url}')
-        
+        """Error 404 - Resource not found"""
+        logger.info(f'resource not found: {request.url}')
+            
         if request.is_json:
             return jsonify({
                 'error': 'Resource not found',
@@ -69,8 +69,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(413)
     def too_large_error(error):
-        """Ошибка 413 - Слишком большой файл"""
-        logger.warning(f'File too large: {error}')
+        """Error 413 - File too large"""
+        logger.warning(f'file too large: {error}')
         
         max_size_mb = app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)
         
@@ -86,8 +86,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(429)
     def too_many_requests_error(error):
-        """Ошибка 429 - Слишком много запросов"""
-        logger.warning(f'Too many requests from {request.remote_addr}')
+        """Error 429 - Too many requests"""
+        logger.warning(f' Too many requests from {request.remote_addr}')
         
         if request.is_json:
             return jsonify({
@@ -100,8 +100,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_error(error):
-        """Ошибка 500 - Внутренняя ошибка сервера"""
-        logger.error(f'Internal server error: {error}')
+        """Error 500 - Internal server error"""
+        logger.error(f'internal server error: {error}')
         
         if request.is_json:
             return jsonify({
@@ -114,8 +114,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(503)
     def service_unavailable_error(error):
-        """Ошибка 503 - Сервис недоступен"""
-        logger.error(f'Service unavailable: {error}')
+        """Error 503 - Service unavailable"""
+        logger.error(f'SERVICE unavailable: {error}')
         
         if request.is_json:
             return jsonify({
@@ -128,8 +128,8 @@ def register_error_handlers(app):
 
     @app.errorhandler(ValidationError)
     def validation_error(error):
-        """Обработка кастомных ошибок валидации"""
-        logger.warning(f'Validation error: {error.message}')
+        """Handling custom validation errors"""
+        logger.warning(f'validation error: {error.message}')
         
         if request.is_json:
             return jsonify({
@@ -142,9 +142,9 @@ def register_error_handlers(app):
 
     @app.errorhandler(ProcessingError)
     def processing_error(error):
-        """Обработка кастомных ошибок обработки"""
-        logger.error(f'Processing error: {error.message}')
-        
+        """Handling custom processing errors"""
+        logger.error(f'processing error: {error.message}')
+            
         if request.is_json:
             return jsonify({
                 'error': 'Processing error',
@@ -154,11 +154,11 @@ def register_error_handlers(app):
         
         return render_template('errors/processing.html', message=error.message), error.status_code
 
-    # Обработка общих исключений
+    # Handling common exceptions
     @app.errorhandler(Exception)
     def handle_generic_error(error):
-        """Обработка всех непредвиденных исключений"""
-        logger.error(f'Unhandled exception: {error}', exc_info=True)
+        """Handling all unexpected exceptions"""
+        logger.error(f'unhandled exception: {error}', exc_info=True)
         
         if request.is_json:
             return jsonify({
@@ -168,4 +168,3 @@ def register_error_handlers(app):
             }), 500
         
         return render_template('errors/generic.html'), 500
-

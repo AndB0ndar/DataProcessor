@@ -8,7 +8,10 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import Blueprint, request, jsonify, current_app
 
-from handlers.errors import ValidationError, ProcessingError
+from handlers import (
+    JSONValidator, FileProcessor, TaskManager, LogManager,
+    ValidationError, ProcessingError
+)
 
 
 api_bp = Blueprint('api', __name__)
@@ -16,110 +19,74 @@ api_bp = Blueprint('api', __name__)
 logger = logging.getLogger(__name__)
 
 
-def allowed_file(filename):
-    """Проверка разрешенных расширений файлов"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
-
-
-def validate_json_schema(data):
-    """Валидация структуры JSON"""
-    required_fields = ['version', 'timestamp', 'data']
-    
-    for field in required_fields:
-        if field not in data:
-            raise ValidationError(f'Отсутствует обязательное поле: {field}')
-    
-    if not isinstance(data['data'], list):
-        raise ValidationError('Поле "data" должно быть массивом')
-    
-    if not data['data']:
-        raise ValidationError('Массив "data" не должен быть пустым')
-    
-    # Проверка лимита записей
-    if len(data['data']) > current_app.config['MAX_RECORDS_PER_FILE']:
-        raise ValidationError(
-            f'Превышено максимальное количество записей: {current_app.config["MAX_RECORDS_PER_FILE"]}'
-        )
-    
-    try:
-        datetime.fromisoformat(data['timestamp'].replace('Z', '+00:00'))
-    except (ValueError, TypeError):
-        raise ValidationError('Неверный формат timestamp')
-    
-    return True
-
-
 @api_bp.route('/upload', methods=['POST'])
 def api_upload():
-    """API для загрузки JSON файла"""
+    """API for uploading a JSON file"""
     if 'file' not in request.files:
-        raise ValidationError('Файл не найден')
+        raise ValidationError('File not found')
     
     file = request.files['file']
     
-    if file.filename == '':
-        raise ValidationError('Файл не выбран')
-    
-    if not (file and allowed_file(file.filename)):
-        raise ValidationError('Неподдерживаемый формат файла')
+    # File validation
+    JSONValidator.validate_file_upload(file)
     
     try:
-        # Чтение и парсинг JSON
+        # Reading and parsing JSON
         file_content = file.read().decode('utf-8')
         json_data = json.loads(file_content)
         
-        # Валидация
-        validate_json_schema(json_data)
+        JSONValidator.validate_json_structure(json_data)
+        JSONValidator.validate_json_content(json_data)
         
-        # Сохранение файла
-        filename = secure_filename(file.filename)
-        file_id = str(uuid.uuid4())
-        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], f"{file_id}_{filename}")
+        # Saving the file
+        file_info = FileProcessor.save_uploaded_file(file)
         
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=2)
+        # Creating a processing task
+        task_id = TaskManager.create_task(file_info['file_path'])
+        TaskManager.start_processing(task_id)
         
-        # Создание задачи обработки
-        task_id = str(uuid.uuid4())
-        
-        logger.info(f"Файл загружен: {filename}, task_id: {task_id}, records: {len(json_data['data'])}")
+        # Event logging
+        LogManager.log_processing_event(
+            task_id, 
+            'file_uploaded',
+            f' File uploaded: {file_info["filename"]}',
+            {'records_count': len(json_data['data']), 'file_size': file_info['file_size']}
+        )
         
         return jsonify({
             'success': True,
-            'message': 'Файл успешно загружен и проверен',
+            'message': 'The file has been uploaded and verified successfully',
             'task_id': task_id,
-            'filename': filename,
-            'file_size': len(file_content),
+            'filename': file_info['filename'],
+            'file_size': file_info['file_size'],
             'records_count': len(json_data['data'])
         })
         
     except json.JSONDecodeError as e:
         logger.error(f"JSON decode error: {str(e)}")
-        raise ValidationError(f'Ошибка парсинга JSON: {str(e)}')
-    except ValidationError:
-        # Перебрасываем ValidationError без изменений
+        raise ValidationError(f'JSON parsing error: {str(e)}')
+    except (ValidationError, ProcessingError):
         raise
     except Exception as e:
-        logger.error(f"Ошибка при обработке файла: {str(e)}")
-        raise ProcessingError('Внутренняя ошибка сервера при обработке файла')
+        logger.error(f"Error processing file: {str(e)}")
+        raise ProcessingError('Internal server error processing file')
 
 
 @api_bp.route('/start_processing', methods=['POST'])
 def api_start_processing():
-    """API для запуска обработки данных"""
+    """API for starting data processing"""
     data = request.get_json()
     task_id = data.get('task_id')
     
     if not task_id:
-        raise ValidationError('ID задачи не указан')
+        raise ValidationError('Issue ID not specified')
     
-    # Здесь будет логика запуска обработки
-    logger.info(f"Запущена обработка для task_id: {task_id}")
+    # Here will be the logic for starting processing
+    logger.info(f"Processing started for task_id: {task_id}")
     
     return jsonify({
         'success': True,
-        'message': 'Обработка данных запущена',
+        'message': 'Data processing started',
         'task_id': task_id,
         'status_url': '/status',
         'timeout': current_app.config['PROCESSING_TIMEOUT']
@@ -128,36 +95,19 @@ def api_start_processing():
 
 @api_bp.route('/processing_status/<task_id>')
 def api_processing_status(task_id):
-    """API для получения статуса обработки"""
-    # Имитация прогресса обработки
-    progress = random.randint(10, 95)
-    
-    phases = [
-        {'id': 'phase1', 'name': 'Загрузка файла', 'status': 'completed', 'progress': 100},
-        {'id': 'phase2', 'name': 'Анализ данных', 'status': 'active', 'progress': progress},
-        {'id': 'phase3', 'name': 'Обработка', 'status': 'pending', 'progress': 0},
-        {'id': 'phase4', 'name': 'Формирование отчета', 'status': 'pending', 'progress': 0}
-    ]
-    
-    return jsonify({
-        'task_id': task_id,
-        'status': 'processing',
-        'overall_progress': progress,
-        'current_phase': 'Анализ данных',
-        'phases': phases,
-        'logs': [
-            {'timestamp': '10:23:15', 'level': 'info', 'message': 'Загрузка JSON-файла началась'},
-            {'timestamp': '10:23:16', 'level': 'success', 'message': 'Файл успешно загружен и проверен'},
-            {'timestamp': '10:23:17', 'level': 'info', 'message': 'Начало анализа входных данных...'},
-            {'timestamp': '10:23:45', 'level': 'info', 'message': f'Обработано {progress}% данных...'}
-        ]
-    })
+    """API for getting the processing status"""
+    task_status = TaskManager.get_task_status(task_id)
+
+    if not task_status:
+        raise ValidationError('Task not found')
+
+    return jsonify(task_status)
 
 
 @api_bp.route('/results')
 def api_results():
-    """API для получения списка результатов"""
-    # Имитация данных результатов
+    """API for getting a list of results"""
+    # Simulation of results data
     sample_results = [
         {
             'id': '2024-01-15_10-23-15',
@@ -183,15 +133,15 @@ def api_results():
 
 @api_bp.route('/logs')
 def api_logs():
-    """API для получения логов"""
-    # Имитация логов
+    """API for getting logs"""
+    # Log simulation
     levels = ['info', 'warning', 'error', 'debug']
     messages = [
-        'Проверка целостности данных',
-        'Оптимизация использования памяти',
-        'Кэширование промежуточных результатов',
-        'Экспорт данных во внешнюю систему',
-        'Очистка временных файлов'
+        'Data Integrity check',
+        'Optimizing memory usage',
+        'Caching intermediate results',
+        'Exporting data to an external system',
+        'Cleaning temporary files'
     ]
     
     logs = []
@@ -203,7 +153,7 @@ def api_logs():
             'timestamp': timestamp,
             'level': level,
             'message': message,
-            'details': f'Детали для {message.lower()}'
+            'details': f' Details for {message.lower()} '
         })
     
     return jsonify({'logs': logs})
@@ -211,7 +161,7 @@ def api_logs():
 
 @api_bp.route('/config')
 def api_config():
-    """API для получения информации о конфигурации (только для разработки)"""
+    """API for getting configuration information (for development only)"""
     if current_app.config['DEBUG']:
         return jsonify({
             'config': {
@@ -223,4 +173,14 @@ def api_config():
         })
     else:
         return jsonify({'error': 'Not available in production'}), 403
+
+
+@api_bp.route('/system/metrics')
+def api_system_metrics():
+    """API for getting system metrics"""
+    if not current_app.config['DEBUG']:
+        return jsonify({'error': 'Not available in production'}), 403
+    
+    metrics = LogManager.get_system_metrics()
+    return jsonify(metrics)
 

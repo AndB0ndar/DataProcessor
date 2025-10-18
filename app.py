@@ -5,39 +5,42 @@ from flask import Flask
 from datetime import datetime
 
 from config import get_config
-from handlers.errors import register_error_handlers
+from handlers import register_error_handlers, LogManager
 
 
 def create_app(config_class=None):
-    """Фабрика приложения"""
+    """Application factory"""
     app = Flask(__name__)
     
-    # Загрузка конфигурации
+    # Loading configuration
     if config_class is None:
         config_class = get_config()
     
     app.config.from_object(config_class)
     
-    # Инициализация конфигурации
+    # Initializing configuration
     config_class.init_app(app)
+
+    # Setting up logging
+    LogManager.setup_logging(app)
     
-    # Регистрация Blueprints
+    # Register Blueprints
     register_blueprints(app)
     
-    # Регистрация обработчиков ошибок
+    # Registration of error handlers
     register_error_handlers(app)
     
-    # Регистрация команд CLI
+    # Registration of CLI commands
     register_commands(app)
     
-    # Регистрация контекстных процессоров
+    # Registration of context processors
     register_context_processors(app)
     
     return app
 
 
 def register_blueprints(app):
-    """Регистрация всех Blueprints"""
+    """Registration of all Blueprints"""
     from routes.api import api_bp
     from routes.website import site_bp
     
@@ -46,16 +49,16 @@ def register_blueprints(app):
 
 
 def register_commands(app):
-    """Регистрация CLI команд"""
+    """Registration of CLI commands"""
     
     @app.cli.command('init-db')
     def init_db_command():
-        """Инициализация базы данных (если добавите в будущем)"""
+        """Database initialization (if added in the future)"""
         app.logger.info('Database initialization would happen here')
     
     @app.cli.command('clear-uploads')
     def clear_uploads_command():
-        """Очистка папки uploads"""
+        """Clearing the uploads folder"""
         import shutil
         import os
         
@@ -69,7 +72,7 @@ def register_commands(app):
     
     @app.cli.command('check-config')
     def check_config_command():
-        """Проверка текущей конфигурации"""
+        """Checking the current configuration"""
         app.logger.info('Current configuration:')
         for key, value in app.config.items():
             if not key.startswith('_') and not callable(value):
@@ -77,11 +80,11 @@ def register_commands(app):
 
 
 def register_context_processors(app):
-    """Регистрация контекстных процессоров"""
+    """Registration of context processors"""
     
     @app.context_processor
     def utility_processor():
-        """Добавление утилит в контекст шаблонов"""
+        """Adding utilities to the template context"""
 
         return {
             'app_name': app.config['APP_NAME'],

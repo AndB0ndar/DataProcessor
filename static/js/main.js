@@ -1,6 +1,5 @@
-// Основные утилиты для всего приложения
 document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация активной навигации
+    // Initializing active navigation
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-links a');
     
@@ -10,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Утилиты для форматирования
+    // Formatting utilities
     window.formatFileSize = function(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -19,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
     
-    // Утилиты для работы со временем
+    // Utilities for working with time
     window.formatTime = function(seconds) {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
