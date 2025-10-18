@@ -114,8 +114,7 @@ jobs:
           script: |
             echo "Verifying deployment..."
 
-            # Проверяем что сервис запущен
-            if systemctl is-active --quiet dataprocessor.service; then
+            if systemctl is-active --quiet arbond-dataprocessor.service; then
               echo "Service is running"
             else
               echo "Service is not running"
@@ -124,17 +123,5 @@ jobs:
             
             sudo systemctl status arbond-dataprocessor.service --no-pager -l
             sudo systemctl status nginx --no-pager -l
-
-            # Проверяем логи на ошибки
-            if [ -f "${{ env.DEPLOY_PATH }}/logs/error.log" ]; then
-              ERROR_COUNT=$(grep -c "ERROR" ${{ env.DEPLOY_PATH }}/logs/error.log || true)
-              if [ "$ERROR_COUNT" -gt 0 ]; then
-                echo "Found $ERROR_COUNT errors in log file"
-                tail -10 ${{ env.DEPLOY_PATH }}/logs/error.log
-              else
-                echo "No errors in log file"
-              fi
-            fi
-            
             echo "Deployment verification completed!"
 
