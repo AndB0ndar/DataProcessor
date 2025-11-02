@@ -1,0 +1,73 @@
+/* ===== Timer Component ===== */
+.timer {
+    background: var(--cream);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.timer__label {
+    font-size: var(--text-sm);
+    color: var(--dark-slate);
+    margin-bottom: var(--space-xs);
+}
+
+.timer__display {
+    font-size: var(--text-3xl);
+    font-weight: bold;
+    color: var(--dark-slate);
+    font-family: var(--font-mono);
+    line-height: 1;
+}
+
+/* Timer Modifiers */
+.timer--compact {
+    padding: var(--space-md);
+}
+
+.timer--compact .timer__display {
+    font-size: var(--text-2xl);
+}
+
+.timer--large .timer__display {
+    font-size: var(--text-4xl);
+}
+
+.timer--warning .timer__display {
+    color: var(--amber);
+}
+
+.timer--critical .timer__display {
+    color: var(--accent-orange);
+}
+
+.timer--success .timer__display {
+    color: var(--primary-green);
+}
+
+/* Responsive Timer */
+@media (max-width: 768px) {
+    .timer {
+        padding: var(--space-md);
+    }
+    
+    .timer__display {
+        font-size: var(--text-2xl);
+    }
+    
+    .timer--large .timer__display {
+        font-size: var(--text-3xl);
+    }
+}
+
+@media (max-width: 480px) {
+    .timer {
+        padding: var(--space-sm);
+    }
+    
+    .timer__display {
+        font-size: var(--text-xl);
+    }
+}

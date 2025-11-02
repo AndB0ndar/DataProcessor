@@ -1,0 +1,15 @@
+.page {
+  font-family: var(--font-primary);
+  color: var(--deep-navy);
+  background-color: var(--light-gray);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Prevent body scroll when menu is active */
+.page__menu--open {
+  overflow: hidden;
+}
+

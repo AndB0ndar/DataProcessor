@@ -1,0 +1,46 @@
+/* Note Block */
+.note {
+    background: var(--cream);
+    border-left: 4px solid var(--amber);
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    margin: var(--space-lg) 0;
+    font-family: var(--font-primary);
+}
+
+.note__strong {
+    font-weight: 600;
+    color: var(--accent-orange);
+    margin-right: var(--space-sm);
+}
+
+.note__text {
+    color: var(--deep-navy);
+    line-height: 1.6;
+}
+
+/* Note Modifiers */
+.note--warning {
+    border-left-color: var(--accent-orange);
+    background: linear-gradient(135deg, var(--cream) 0%, var(--amber) 100%);
+}
+
+.note--info {
+    border-left-color: var(--primary-green);
+    background: linear-gradient(135deg, var(--mint) 0%, var(--cream) 100%);
+}
+
+.note--error {
+    border-left-color: #e53e3e;
+    background: linear-gradient(135deg, #fed7d7 0%, #fff5f5 100%);
+}
+
+.note--success {
+    border-left-color: var(--forest-green);
+    background: linear-gradient(135deg, #c6f6d5 0%, #f0fff4 100%);
+}
+
+.note--compact {
+    padding: var(--space-md);
+    font-size: var(--text-sm);
+}

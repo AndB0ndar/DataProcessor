@@ -1,0 +1,7 @@
+/* ===== Color Utility Classes ===== */
+.text-amber { color: var(--amber); }
+.bg-mint { background-color: var(--mint); }
+.text-dark { color: var(--deep-navy); }
+.bg-cream { background-color: var(--cream); }
+.text-primary { color: var(--primary-green); }
+.bg-primary { background-color: var(--primary-green); }

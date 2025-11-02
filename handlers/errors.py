@@ -56,7 +56,7 @@ def register_error_handlers(app):
     @app.errorhandler(404)
     def not_found_error(error):
         """Error 404 - Resource not found"""
-        logger.info(f'resource not found: {request.url}')
+        logger.error(f'resource not found: {request.url}')
             
         if request.is_json:
             return jsonify({
