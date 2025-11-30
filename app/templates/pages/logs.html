@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Страница логов{% endblock %}
+
+{% block hero_title %}Логи выполнения программы{% endblock %}
+{% block hero_description %}Детальная информация о процессе обработки данных{% endblock %}
+
+{% block content %}
+<div class="main__container">
+    <div class="main__content">
+        <div class="main__header">
+            <h1 class="main__title">Журнал выполнения</h1>
+        </div>
+        
+        <div class="filter">
+            <div class="filter__controls">
+                <!-- search -->
+                <div class="filter__group">
+                    <label class="filter__label">Поиск в логах</label>
+                    <input type="text" class="filter__search" placeholder="Введите текст...">
+                </div>
+
+                <!-- options -->
+                <div class="filter__group">
+                    <label class="filter__checkbox-label">
+                        <input type="checkbox" class="filter__checkbox" checked>
+                        <span class="filter__checkbox-text">Автопрокрутка</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter__actions">
+                <button class="button button--outline button--small" onclick="downloadLogs()">
+                    <span class="button__icon">⭳</span>
+                    Экспорт логов
+                </button>
+            </div>
+        </div>
+        
+        <section class="main__section">
+            <div class="content-panel content-panel--dark">
+                <pre class="content-panel__list" id="logsContent">
+                    <!-- logs was added here -->
+                </pre>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="main__content">
+        <h3 class="main__section-title">Справочная информация</h3>
+        <div class="grid grid--two">
+            <div class="card">
+                <h4 class="card__title card__title--small">Уровни логов</h4>
+                <ul class="card__list card__list--marked">
+                    <li class="card__item">
+                        <strong class="card__label">INFO</strong> - Информационные сообщения о ходе выполнения
+                    </li>
+                    <li class="card__item">
+                        <strong class="card__label">WARNING</strong> - Предупреждения о потенциальных проблемах
+                    </li>
+                    <li class="card__item">
+                        <strong class="card__label">ERROR</strong> - Критические ошибки выполнения
+                    </li>
+                    <li class="card__item">
+                        <strong class="card__label">DEBUG</strong> - Отладочная информация для разработчиков
+                    </li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4 class="card__title card__title--small">Функции</h4>
+                <ul class="card__list">
+                    <li class="card__item">Фильтрация логов по уровню важности</li>
+                    <li class="card__item">Поиск по содержимому логов</li>
+                    <li class="card__item">Автоматическая прокрутка к новым сообщениям</li>
+                    <li class="card__item">Экспорт логов в формате TXT или JSON</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log("Initializing logs monitoring for run {{ run.id }}");
+
+let logsPollInterval = null;
+let autoScrollEnabled = true;
+let isFinished = false;
+
+// Filter state
+let currentFilters = {
+    search: '',
+    autoScroll: true
+};
+
+// DOM elements
+const logsContent = document.getElementById('logsContent');
+const searchInput = document.querySelector('.filter__search');
+const autoScrollCheckbox = document.querySelector('.filter__checkbox');
+
+function updateLogs(data) {
+    if (data.log_content !== undefined) {
+        const originalContent = data.log_content;
+        if (logsContent.textContent !== originalContent) {
+            logsContent.textContent = originalContent;
+            applyFilters(originalContent);
+            if (currentFilters.autoScroll) {
+                logsContent.scrollTop = logsContent.scrollHeight;
+            }
+        }
+    }
+    updateElementVisibility(data.status);
+}
+
+function updateElementVisibility(status) {
+    if (status && ['completed', 'failed', 'cancelled'].includes(status) && !isFinished) {
+        isFinished = true;
+        stopLogsPolling();
+        console.log(`Run ${status}. Logs polling stopped.`);
+    }
+}
+
+function applyFilters(content) {
+    if (!content) return;
+    
+    let filteredContent = content;
+    
+    // Apply search filter
+    if (currentFilters.search) {
+        const lines = filteredContent.split('\n');
+        filteredContent = lines.filter(line => 
+            line.toLowerCase().includes(currentFilters.search.toLowerCase())
+        ).join('\n');
+    }
+    
+    // Update display
+    logsContent.textContent = filteredContent || 'Нет сообщений, соответствующих фильтрам';
+    
+    // Apply auto-scroll if enabled
+    if (currentFilters.autoScroll) {
+        logsContent.scrollTop = logsContent.scrollHeight;
+    }
+}
+
+function initializeFilters() {
+    // Search input handler
+    searchInput.addEventListener('input', function(e) {
+        currentFilters.search = e.target.value;
+        applyFilters(logsContent.dataset.originalContent || logsContent.textContent);
+    });
+    
+    // Auto-scroll checkbox handler
+    autoScrollCheckbox.addEventListener('change', function(e) {
+        currentFilters.autoScroll = e.target.checked;
+        autoScrollEnabled = e.target.checked;
+        
+        if (currentFilters.autoScroll) {
+            logsContent.scrollTop = logsContent.scrollHeight;
+        }
+        
+        showToast(currentFilters.autoScroll ? 'Автопрокрутка включена' : 'Автопрокрутка выключена');
+    });
+}
+
+function clearFilters() {
+    // Reset search
+    searchInput.value = '';
+    currentFilters.search = '';
+    
+    // Apply reset
+    const originalContent = logsContent.dataset.originalContent || logsContent.textContent;
+    applyFilters(originalContent);
+    
+    showToast('Фильтры сброшены');
+}
+
+function downloadLogs() {
+    const outputLog = logsContent.textContent;
+    const originalContent = logsContent.dataset.originalContent || outputLog;
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `librelane-run-{{ run.id }}-${timestamp}.log`;
+    
+    const content = `LibreLane Run #{{ run.id }} - Logs\n` +
+                   `Generated: ${new Date().toLocaleString()}\n` +
+                   `Status: {{ run.status.value }}\n` +
+                   `Search Filter: "${currentFilters.search}"\n\n` +
+                   `=== FILTERED LOGS ===\n${outputLog}\n\n` +
+                   `=== ORIGINAL LOGS ===\n${originalContent}\n`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Логи экспортированы успешно');
+}
+
+function showToast(message) {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.toast-container');
+    existingToasts.forEach(toast => toast.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    toast.innerHTML = `
+        <div class="toast show" role="alert">
+            <div class="toast-body d-flex align-items-center">
+                <span class="flex-grow-1">${message}</span>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 3000);
+    
+    // Add click to dismiss
+    toast.querySelector('.btn-close').addEventListener('click', () => {
+        toast.remove();
+    });
+}
+
+function stopLogsPolling() {
+    if (logsPollInterval) {
+        clearInterval(logsPollInterval);
+        logsPollInterval = null;
+    }
+}
+
+function startLogsPolling() {
+    logsPollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`{{ url_for('api.logs', run_id=run.id) }}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Error fetching logs:', data.error);
+                stopLogsPolling();
+                return;
+            }
+            
+            updateLogs(data);
+            
+        } catch (error) {
+            console.error('Logs polling failed:', error);
+        }
+    }, 1500);
+}
+
+// Enhanced auto-scroll handling
+function setupAutoScroll() {
+    logsContent.addEventListener('scroll', function() {
+        const isAtBottom = this.scrollHeight - this.scrollTop <= this.clientHeight + 10;
+        if (!isAtBottom && autoScrollEnabled) {
+            autoScrollEnabled = false;
+            currentFilters.autoScroll = false;
+            autoScrollCheckbox.checked = false;
+        }
+    });
+}
+
+// Initialize everything
+window.onload = function() {
+    const initialData = {
+        log_content: {{ run.log_content | tojson }},
+        status: {{ run.status.value | tojson }}
+    };
+    
+    // Store original content for filtering
+    if (initialData.log_content) {
+        logsContent.dataset.originalContent = initialData.log_content;
+    }
+    
+    updateLogs(initialData);
+    updateElementVisibility(initialData.status);
+    
+    // Initialize filters and event listeners
+    initializeFilters();
+    setupAutoScroll();
+    
+    startLogsPolling();
+};
+
+window.addEventListener('beforeunload', function() {
+    stopLogsPolling();
+});
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+    }
+    
+    // Escape to clear filters
+    if (e.key === 'Escape') {
+        if (searchInput.value) {
+            clearFilters();
+        }
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}

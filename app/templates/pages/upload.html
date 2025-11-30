@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block hero_title %}Обработка данных{% endblock %}
+{% block hero_description %}Загрузите JSON-файл для запуска процесса обработки{% endblock %}
+
+{% block content %}
+<!-- Upload section -->
+<div class="main__container">
+    <section class="main__content">
+        <div class="main__header">
+            <h1 class="main__title">Загрузка данных для обработки</h1>
+            <p class="main__description">Выберите JSON-файл с данными для анализа</p>
+        </div>
+        <div class="main__sections">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm" class="file-uploader">
+                <div class="file-uploader__wrapper">
+                    <input class="file-uploader__input" type="file" id="fileInput" name="files" 
+                           accept=".json,.yaml,.yml,.conf,.v,.vh,.sv" multiple required>
+                    <label class="file-uploader__dropzone" for="fileInput">
+                        <div class="file-uploader__icon">📁⚙️</div>
+                        <div class="file-uploader__prompt" id="dropzoneText">Перетащите файлы сюда или нажмите для выбора</div>
+                        <div class="file-uploader__hint">
+                            <strong>Требуемые файлы:</strong><br>
+                            Конфигурационный файл (.json, .yaml, .conf),<br>
+                            Исходные файлы Verilog (.v, .sv)
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="file-uploader__preview" id="filePreview">
+                    <!-- Файлы будут добавляться динамически -->
+                </div>
+                
+                <div class="file-uploader__feedback" id="feedback"></div>
+                
+                <button class="button button--secondary button--full-width button--disabled" type="submit" id="submitBtn">
+                    Запустить обработку данных
+                </button>
+            </form>
+        </div>
+    </section>
+        
+    <!-- Features section -->
+    <section class="main__content main__content--no-shadow">
+        <div class="grid grid--three">
+            <article class="card">
+                <header class="card__header">
+                    <div class="card__icon">⚡</div>
+                    <h3 class="card__title">Быстрая обработка</h3>
+                </header>
+                <div class="card__content">
+                    <span class="card__text">Оптимизированные алгоритмы для высокой скорости анализа данных</p>
+                </div>
+            </article>
+            
+            <article class="card">
+                <header class="card__header">
+                    <div class="card__icon">🔒</div>
+                    <h3 class="card__title">Безопасность</h3>
+                </header>
+                <div class="card__content">
+                    <p class="card__text">Все данные обрабатываются локально и не передаются третьим лицам</p>
+                </div>
+            </article>
+            
+            <article class="card">
+                <header class="card__header">
+                    <div class="card__icon">📊</div>
+                    <h3 class="card__title">Детальная аналитика</h3>
+                </header>
+                <div class="card__content">
+                    <p class="card__text">Получите подробные отчеты и визуализации результатов</p>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='file-uploader/file-uploader.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
+

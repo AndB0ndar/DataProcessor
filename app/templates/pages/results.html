@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Страница результатов{% endblock %}
+
+{% block hero_title %}Результаты выполнения{% endblock %}
+{% block hero_description %}Просмотр и управление директориями с результатами обработки{% endblock %}
+
+{% block content %}
+<div class="main__container">
+    <div class="main__content main__content--full">
+        <div class="main__header">
+            <h1 class="main__title">Results for Run #{{ run.id }}</h1>
+            <p class="main__description">Download and review your LibreLane execution results</p>
+        </div>
+
+        <section class="main__section grid grid--two">
+            <div class="card card--bordered">
+                <div class="card__content">
+                    <h3 class="main__section-title card__title card__title--small">Run Information</h3>
+                    <div class="card__body">
+                        <div class="card__content--inline">
+                            <span class="card__label">Status:</span>
+                            <span class="card__badge card__badge--green">COMPLETED</span>
+                        </div>
+                        <div class="card__content--inline">
+                            <span class="card__label">Duration:</span>
+                            <span class="card__text">{{ run.duration }}</span>
+                        </div>
+                        <div class="card__content--inline">
+                            <span class="card__label">Started:</span>
+                            <span class="card__text">{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+                        <div class="card__content--inline">
+                            <span class="card__label">Completed:</span>
+                            <span class="card__text">{{ run.end_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        </div>
+                        <div class="card__content--inline">
+                            <span class="card__label">Total Stages:</span>
+                            <span class="card__text">{{ run.completed_stages_list|length }}/6</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Загрузка результатов -->
+            <div class="card card--bordered">
+                <div class="card__content">
+                    <h3 class="main__section-title card__title card__title--small">Download Results</h3>
+                    <div class="card__body card__body--center">
+                        <p class="card__text">Download the complete results archive containing all generated files.</p>
+                        {% if run.archive_filename %}
+                        <div class="button-group button-group--centered">
+                            <a href="{{ url_for('api.download_results', run_id=run.id) }}" 
+                               class="button button--primary">
+                                <span class="button__icon">📦</span>
+                                Download Results Archive
+                            </a>
+                        </div>
+                        <small class="card__text card__text--muted">
+                            Contains all output files, logs, and reports from the LibreLane run.
+                        </small>
+                        {% else %}
+                        <div class="card card--warning">
+                            <div class="card__content">
+                                <p class="card__text">Results archive is not available yet.</p>
+                                <div class="button-group">
+                                    <a href="{{ url_for('runs.status', run_id=run.id) }}" 
+                                       class="button button--outline button--small">
+                                        Check Status
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}
+
+{% block styles %}
+{% endblock %}

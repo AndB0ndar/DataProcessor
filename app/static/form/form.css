@@ -1,0 +1,176 @@
+/* ===== Form Component ===== */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.form__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.form__group--gap-sm {
+    gap: var(--space-sm);
+}
+
+.form__label {
+    font-weight: 600;
+    color: var(--dark-slate);
+}
+
+.form__input {
+    background: var(--deep-navy);
+    color: var(--cream);
+    padding: var(--space-md);
+    border: 2px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    font-family: var(--font-primary);
+    font-size: var(--text-base);
+    transition: all 0.3s ease;
+}
+
+.form__input:focus {
+  outline: none;
+  border-color: var(--light-gray);
+  box-shadow: 0 0 0 3px rgba(135, 169, 107, 0.1);
+}
+
+.form__hint {
+    font-size: var(--text-sm);
+    color: var(--dark-slate);
+    opacity: 0.7;
+}
+
+.form__submit {
+}
+
+.form__details {
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.form__details[open] {
+    background: var(--cream);
+}
+
+.form__code {
+    display: block;
+    padding: var(--space-md);
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    font-family: monospace;
+    font-size: var(--text-sm);
+    word-break: break-all;
+}
+
+/* Стили для кнопок формы */
+.form__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md) var(--space-lg);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: var(--text-md);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-height: 44px;
+    gap: var(--space-sm);
+}
+
+.form__button--primary {
+    background-color: var(--primary-green);
+    color: white;
+    width: 100%;
+}
+
+.form__button--primary:hover {
+    background-color: var(--forest-green);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.form__button--secondary {
+    background-color: var(--mint);
+    color: var(--deep-navy);
+    border-color: var(--mint);
+}
+
+.form__button--secondary:hover {
+    background-color: var(--forest-green);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.form__button--outline {
+    background-color: transparent;
+    color: var(--dark-slate);
+    border-color: var(--light-gray);
+}
+
+.form__button--outline:hover {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    background-color: rgba(100, 200, 200, 0.1);
+}
+
+.form__button--success {
+    background-color: var(--forest-green);
+    color: white;
+    border-color: var(--forest-green);
+}
+
+/* Состояния кнопок */
+.form__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.form__button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(100, 200, 200, 0.3);
+}
+
+/* Иконки в кнопках */
+.form__button::before {
+    font-size: 1.2em;
+}
+
+.form__button--loading {
+    position: relative;
+    color: transparent;
+}
+
+.form__button--loading::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+}
+
+/* Адаптивность для кнопок */
+@media (max-width: 768px) {
+    .form__button {
+        padding: var(--space-sm) var(--space-md);
+        font-size: var(--text-sm);
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .form__button {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--text-xs);
+        min-height: 36px;
+    }
+}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Произошла ошибка{% endblock %}
+
+{% block hero_title %}Произошла ошибка{% endblock %}
+{% block hero_description %}Во время обработки вашего запроса произошла непредвиденная ошибка{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: #95a5a6; margin-bottom: 1rem;">❓</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Произошла ошибка</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                Во время обработки вашего запроса произошла непредвиденная ошибка.
+            </p>
+            <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="color: var(--dark-slate); margin: 0;">
+                    <strong>Рекомендуемые действия:</strong>
+                </p>
+                <ul style="text-align: left; color: var(--dark-slate); margin: 1rem 0;">
+                    <li>Попробуйте повторить действие через несколько минут</li>
+                    <li>Проверьте корректность введенных данных</li>
+                    <li>Если ошибка повторяется, обратитесь в техническую поддержку</li>
+                </ul>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.upload') }}" class="btn">На главную</a>
+                <button onclick="location.reload()" class="btn btn-secondary">Попробовать снова</button>
+                <a href="mailto:support@dataprocessor.example" class="btn" style="background-color: var(--dark-slate);">
+                    Техподдержка
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

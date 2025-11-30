@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Внутренняя ошибка сервера{% endblock %}
+
+{% block hero_title %}500 - Внутренняя ошибка{% endblock %}
+{% block hero_description %}Произошла внутренняя ошибка сервера{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: #e74c3c; margin-bottom: 1rem;">⚠️</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Внутренняя ошибка сервера</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                Произошла непредвиденная ошибка. Мы уже работаем над ее устранением.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.upload') }}" class="btn">На главную</a>
+                <a href="javascript:location.reload()" class="btn btn-secondary">Попробовать снова</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

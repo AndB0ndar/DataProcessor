@@ -1,0 +1,100 @@
+/* ===== Progress Component ===== */
+.progress {
+    background: white;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.progress__info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress__label {
+    font-weight: 600;
+    color: var(--dark-slate);
+}
+
+.progress__percent {
+    font-weight: 700;
+    color: var(--primary-green);
+    font-size: var(--text-lg);
+}
+
+.progress__bar-container {
+    width: 100%;
+    height: 12px;
+    background: var(--light-gray);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress__bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber) 0%, var(--accent-orange) 100%);
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress__phase {
+    font-size: var(--text-sm);
+    color: var(--dark-slate);
+}
+
+.progress__phase-name {
+    font-weight: 600;
+    color: var(--forest-green);
+}
+
+/* Progress Modifiers */
+.progress--compact {
+    padding: var(--space-md);
+}
+
+.progress--no-border {
+    border: none;
+    box-shadow: none;
+}
+
+.progress--success .progress__bar {
+    background: linear-gradient(90deg, var(--primary-green) 0%, var(--forest-green) 100%);
+}
+
+.progress--warning .progress__bar {
+    background: linear-gradient(90deg, var(--amber) 0%, var(--accent-orange) 100%);
+}
+
+.progress--error .progress__bar {
+    background: linear-gradient(90deg, #e53e3e 0%, #c53030 100%);
+}
+
+/* Responsive Progress */
+@media (max-width: 768px) {
+    .progress {
+        padding: var(--space-md);
+    }
+    
+    .progress__info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-xs);
+    }
+    
+    .progress__percent {
+        font-size: var(--text-base);
+    }
+}
+
+@media (max-width: 480px) {
+    .progress {
+        padding: var(--space-sm);
+    }
+    
+    .progress__bar-container {
+        height: 6px;
+    }
+}

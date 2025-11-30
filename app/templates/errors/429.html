@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Слишком много запросов{% endblock %}
+
+{% block hero_title %}429 - Слишком много запросов{% endblock %}
+{% block hero_description %}Вы превысили лимит запросов к серверу{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: var(--amber); margin-bottom: 1rem;">⏱️</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Слишком много запросов</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                Вы превысили лимит запросов к серверу. Пожалуйста, подождите некоторое время перед повторной попыткой.
+            </p>
+            <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="color: var(--dark-slate); margin: 0;">
+                    <strong>Рекомендации:</strong>
+                </p>
+                <ul style="text-align: left; color: var(--dark-slate); margin: 1rem 0;">
+                    <li>Подождите несколько минут перед повторным запросом</li>
+                    <li>Убедитесь, что ваше приложение не отправляет запросы слишком часто</li>
+                    <li>Для API используйте корректные интервалы между запросами</li>
+                </ul>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.upload') }}" class="btn">На главную</a>
+                <button onclick="setTimeout(() => location.reload(), 30000)" class="btn btn-secondary">
+                    Попробовать через 30 сек
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

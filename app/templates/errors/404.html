@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена{% endblock %}
+
+{% block hero_title %}404 - Страница не найдена{% endblock %}
+{% block hero_description %}Запрашиваемая страница не существует{% endblock %}
+
+{% block content %}
+<section class="features">
+    <div class="container">
+        <div class="error-container" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; color: var(--accent-orange); margin-bottom: 1rem;">🔍</div>
+            <h2 style="color: var(--dark-slate); margin-bottom: 1rem;">Страница не найдена</h2>
+            <p style="color: var(--dark-slate); margin-bottom: 2rem;">
+                Запрашиваемая страница не существует или была перемещена.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="{{ url_for('website.upload') }}" class="btn">На главную</a>
+                <a href="{{ url_for('website.help') }}" class="btn btn-secondary">Справка</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

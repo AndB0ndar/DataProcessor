@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Страница регистрации{% endblock %}
+
+{% block hero_title %}Регистрация{% endblock %}
+{% block hero_description %}Получения Magic Link для получение доступа к системе{% endblock %}
+
+
+{% block content %}
+<div class="main__container">
+    <div class="main__content">
+        <div class="main__header">
+            <h4 class="main__title">Получение Magic Link по email</h4>
+        </div>
+
+        <div class="main__section">
+            <form method="POST" class="form">
+                <div class="form__group form__group--gap-sm">
+                    <label for="email" class="form__label">Почтовый адрес</label>
+                    <input type="email" class="form__input" id="email" name="email" 
+                    value="{{ email or '' }}" required placeholder="your@email.com">
+                    <div class="form__hint">Мы отправим ссылку для входа на этот адрес</div>
+                </div>
+                <button type="submit" class="form__button form__button--secondary">Generate Magic Link</button>
+            </form>
+        </div>
+
+        {% if magic_link %}
+        <div class="card">
+            <div class="card__content">
+                <div class="card__body">
+                    <strong class="card__label">Magic Link создан!</strong> 
+                    <span class="card__text">Ссылка для входа готова. Нажмите кнопку ниже или проверьте консоль.</span>
+                    <a href="{{ magic_link }}" class="card__link">Click to Login</a>
+                </div>
+            
+                <details class="form__details">
+                    <summary class="card__label">Technical Details</summary>
+                    <strong class="card__label">Full URL:</strong>
+                    <div class="code code--compact">
+                        <code class="code__code">{{ magic_link }}</code>
+                    </div>
+                </details>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Magic Link скопирован в буфер обмена!');
+    }, function(err) {
+        console.error('Ошибка копирования: ', err);
+    });
+}
+</script>
+{% endblock %}
+
