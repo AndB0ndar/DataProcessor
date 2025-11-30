@@ -12,6 +12,8 @@ def init_app():
         
         runs_folder = app.config.get('RUNS_FOLDER', 'runs')
         os.makedirs(runs_folder, exist_ok=True)
+        logs_folder = app.config.get('LOG_FOLDER', 'logs')
+        os.makedirs(logs_folder, exist_ok=True)
         
         print("Application initialized successfully")
 

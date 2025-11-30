@@ -46,9 +46,6 @@ jobs:
           cp -r wsgi.py run.py requirements.txt deployment/
           cp -r app deployment/
 
-          # Creating the necessary directories
-          mkdir -p deployment/uploads deployment/results deployment/logs
-
           # Creating a file for production
           cat > deployment/.env << EOF
             FLASK_CONFIG=production
