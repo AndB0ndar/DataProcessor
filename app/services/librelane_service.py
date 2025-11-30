@@ -145,10 +145,8 @@ class LibreLaneService:
             project_dir = RunService.get_project_folder(run_id)
             config_path = os.path.join(project_dir, run.config_filename)
             
-            # Обновляем статус
             RunService.set_run_status(run_id, 'running', start_time=datetime.utcnow())
             
-            # Формируем команду LibreLane из конфига
             librelane_cmd = current_app.config.get('LIBRELANE_COMMAND', 'librelane')
             librelane_base_dir = current_app.config.get('LIBRELANE_BASE_DIR', '')
             
@@ -159,7 +157,6 @@ class LibreLaneService:
                 '--log', os.path.join(project_dir, 'output.log')
             ]
             
-            # Запускаем реальную команду LibreLane
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -170,32 +167,40 @@ class LibreLaneService:
             
             cls._active_runs[run_id] = process
             
-            # Читаем вывод в реальном времени
             output_lines = []
             while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
+                if run_id not in cls._active_runs or cls._active_runs[run_id] is False:
+                    process.terminate()
+                    RunService.set_run_status(run_id, 'cancelled', end_time=datetime.utcnow())
                     break
-                if output:
-                    output_lines.append(output)
-                    # Обновляем логи в реальном времени
-                    RunService.update_run_logs(run_id, log_content=''.join(output_lines))
+                if process.poll() is not None:
+                    break
+                stdout_line = process.stdout.readline()
+                if stdout_line:
+                    RunService.update_run_logs(run_id, log_content=stdout_line)
+                stderr_line = process.stderr.readline()
+                if stderr_line:
+                    RunService.update_run_logs(run_id, log_content=f"STDERR: {stderr_line}")
             
             stdout, stderr = process.communicate()
+            if stdout:
+                RunService.update_run_logs(run_id, log_content=stdout)
+            if stderr:
+                RunService.update_run_logs(run_id, log_content=stderr)
             
-            # Финальное обновление статуса
             if process.returncode == 0:
                 RunService.set_run_status(run_id, 'completed', end_time=datetime.utcnow())
                 RunService.complete(run_id)
-                RunService.create_results_archive(run_id)
             else:
                 RunService.set_run_status(run_id, 'failed', end_time=datetime.utcnow())
-                RunService.update_run_logs(run_id, log_content=stderr)
+            RunService.create_results_archive(run_id)
                 
         except Exception as e:
             RunService.set_run_status(run_id, 'failed', end_time=datetime.utcnow())
             RunService.update_run_logs(run_id, log_content=str(e))
         finally:
+            if process and process.poll() is None:
+                process.terminate()
             cls._active_runs.pop(run_id, None)
 
     @classmethod
@@ -207,5 +212,22 @@ class LibreLaneService:
     def cancel_run(cls, run_id):
         if run_id in cls._active_runs:
             cls._active_runs[run_id] = False
+            return True
+        return False
+
+    def cancel_run(cls, run_id):
+        if run_id in cls._active_runs:
+            process = cls._active_runs[run_id]
+            if process and process.poll() is None:
+                try:
+                    process.terminate()
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+
+                RunService.update_run_logs(run_id, log_content="Run was cancelled by user\n")
+            
+            cls._active_runs.pop(run_id, None)
             return True
         return False

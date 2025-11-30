@@ -51,14 +51,13 @@
                             Логи выполнения
                         </a>
                     </li>
-                    {% if current_run.is_finished %}
-                    <li class="header__item">
-                        <a href="{{ url_for('website.results', run_id=current_run.id) }}"
-                            class="header__link {% if request.endpoint == 'website.results' %}header__link--active{% endif %}">
+                    <li class="header__item {% if not current_run.is_finished %}header__item--hidden{% endif %}" 
+                        id="results-nav-item">
+                        <a href="{{ url_for('website.results', run_id=current_run.id) }}" 
+                           class="header__link {% if request.endpoint == 'website.results' %}header__link--active{% endif %}">
                             Результаты
                         </a>
                     </li>
-                    {% endif %}
                 {% endif %}
                     <li class="header__item">
                         <a href="{{ url_for('auth.logout') }}" class="header__link">

@@ -188,6 +188,12 @@ function updateElementVisibility(status) {
         isFinished = true;
         stopPolling();
         console.log(`Запуск ${status}. Опрос остановлен.`);
+
+        //  for base.html
+        const resultsNavItem = document.getElementById('results-nav-item');
+        if (resultsNavItem) {
+            resultsNavItem.classList.remove('header__item--hidden');
+        }
     }
 }
 

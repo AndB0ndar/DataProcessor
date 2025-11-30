@@ -119,6 +119,12 @@ function updateElementVisibility(status) {
         isFinished = true;
         stopLogsPolling();
         console.log(`Run ${status}. Logs polling stopped.`);
+
+        //  for base.html
+        const resultsNavItem = document.getElementById('results-nav-item');
+        if (resultsNavItem) {
+            resultsNavItem.classList.remove('header__item--hidden');
+        }
     }
 }
 
@@ -290,9 +296,9 @@ window.onload = function() {
     // Initialize filters and event listeners
     initializeFilters();
     setupAutoScroll();
-    
-    startLogsPolling();
 };
+
+startLogsPolling();
 
 window.addEventListener('beforeunload', function() {
     stopLogsPolling();

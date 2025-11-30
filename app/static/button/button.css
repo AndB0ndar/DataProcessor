@@ -13,7 +13,6 @@
     transition: all 0.3s ease;
     text-decoration: none;
     gap: var(--space-sm);
-    position: relative;
     overflow: hidden;
 }
 
@@ -105,7 +104,6 @@
     background: var(--light-gray);
     color: var(--dark-slate);
     cursor: not-allowed;
-    opacity: 0.6;
 }
 
 .button:disabled:hover,

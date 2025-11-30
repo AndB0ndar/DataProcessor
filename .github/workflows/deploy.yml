@@ -43,8 +43,8 @@ jobs:
           mkdir -p deployment
 
           # We copy only the necessary files
-          cp -r wsgi.py run.py config.py requirements.txt deployment/
-          cp -r handlers routes static templates deployment/
+          cp -r wsgi.py run.py requirements.txt deployment/
+          cp -r app deployment/
 
           # Creating the necessary directories
           mkdir -p deployment/uploads deployment/results deployment/logs
