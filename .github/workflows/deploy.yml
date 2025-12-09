@@ -45,9 +45,9 @@ jobs:
           cp -r wsgi.py run.py requirements.txt deployment/
           cp -r app deployment/
 
-          cat > ${{ secrets.ENVIRONMENT_FILE }} << EOF
-            FLASK_CONFIG=production
-            APPLICATION_ROOT=/dataproc
+          cat > deployment/.env << EOF
+            FLASK_CONFIG=${{ secrets.FLASK_CONFIG }}
+            APPLICATION_ROOT=${{ secrets.APPLICATION_ROOT }}
             SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
           EOF
           
