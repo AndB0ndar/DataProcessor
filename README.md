@@ -3,6 +3,10 @@
 ![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 
+## ДЕМОНСТРАЦИЯ РАБОТЫ
+
+Роботу приложения можно посмотреть по ссылке: **http://arbond.ru/dataproc**
+
 ## ОБЩИЕ СВЕДЕНИЯ
 
 **Обозначение и наименование программы:** DataProcessor  

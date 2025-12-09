@@ -82,6 +82,23 @@ jobs:
             fi
             source ${{ env.VENV_PATH }}/bin/activate
             pip install -r ${{ env.DEPLOY_PATH }}/requirements.txt
+
+            cd ${{ env.DEPLOY_PATH }}
+            if [ ! -f .db_initialized ] || [ requirements.txt -nt .db_initialized ];
+              python3 << EOF
+              import sys
+              sys.path.insert(0, '.')
+
+              from run import app, db
+              import os
+
+              with app.app_context():
+                db.create_all()
+                print('Database initialized')
+              EOF
+              touch .db_initialized
+            fi
+            cd -
             
             echo "Deployment files copied successfully"
 
