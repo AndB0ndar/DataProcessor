@@ -81,6 +81,7 @@ jobs:
 
             tar -xzf /tmp/deployment.tar.gz -C ${{ env.DEPLOY_PATH }} --strip-components=1
             rm -f /tmp/deployment.tar.gz
+            source ${{ env.DEPLOY_PATH }}/.env
             
             if [ ! -d "${{ env.VENV_PATH }}" ]; then
               python3 -m venv ${{ env.VENV_PATH }}
