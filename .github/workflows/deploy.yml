@@ -5,12 +5,6 @@ on:
     branches:
       - main
 
-env:
-  SSH_HOST: 212.67.17.94
-  SSH_USER: webapp
-  DEPLOY_PATH: /var/www/arbond.ru/dataprocessor
-  VENV_PATH: /var/www/arbond.ru/venv
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -56,8 +50,8 @@ jobs:
       - name: Copy deployment package to server
         uses: appleboy/scp-action@v0.1.3
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "deployment.tar.gz"
           target: "/tmp"
@@ -65,27 +59,27 @@ jobs:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
             echo "Starting deployment process..."
             
-            rm -rf ${{ env.DEPLOY_PATH }}/*
+            rm -rf ${{ secrets.DEPLOY_PATH }}/*
 
-            tar -xzf /tmp/deployment.tar.gz -C ${{ env.DEPLOY_PATH }} --strip-components=1
+            tar -xzf /tmp/deployment.tar.gz -C ${{ secrets.DEPLOY_PATH }} --strip-components=1
             rm -f /tmp/deployment.tar.gz
             
-            if [ ! -d "${{ env.VENV_PATH }}" ]; then
-              python3 -m venv ${{ env.VENV_PATH }}
+            if [ ! -d "${{ secrets.VENV_PATH }}" ]; then
+              python3 -m venv ${{ secrets.VENV_PATH }}
             fi
-            source ${{ env.VENV_PATH }}/bin/activate
-            pip install -r ${{ env.DEPLOY_PATH }}/requirements.txt
+            source ${{ secrets.VENV_PATH }}/bin/activate
+            pip install -r ${{ secrets.DEPLOY_PATH }}/requirements.txt
 
-            cd ${{ secret.DEPLOY_PATH }}
+            cd ${{ secrets.DEPLOY_PATH }}
             if [ ! -f .db_initialized ] || [ requirements.txt -nt .db_initialized ]; then
-              python ${{ secret.DEPLOY_PATH }}/init_db.py
+              python ${{ secrets.DEPLOY_PATH }}/init_db.py
               touch .db_initialized
             fi
             cd -
@@ -95,8 +89,8 @@ jobs:
       - name: Restart Services
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Starting restart services..."
@@ -107,8 +101,8 @@ jobs:
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Verifying deployment..."
@@ -123,4 +117,3 @@ jobs:
             sudo systemctl status arbond-dataprocessor.service --no-pager -l
             sudo systemctl status nginx --no-pager -l
             echo "Deployment verification completed!"
-
