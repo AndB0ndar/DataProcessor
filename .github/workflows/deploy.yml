@@ -47,12 +47,10 @@ jobs:
           cp -r app deployment/
 
           # Creating a file for production
-          cat > deployment/.env << EOF
-            FLASK_CONFIG=production
-            APPLICATION_ROOT=/dataproc
-            SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
-            FLASK_HOST=0.0.0.0
-            FLASK_PORT=8000
+          cat > ${{ secrets.ENVIRONMENT_FILE }} << EOF
+          FLASK_CONFIG=${{ secrets.FLASK_CONFIG }}
+          APPLICATION_ROOT=${{ secrets.APPLICATION_ROOT }}
+          SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
           EOF
           
           # Archiving for transmission
@@ -81,7 +79,6 @@ jobs:
 
             tar -xzf /tmp/deployment.tar.gz -C ${{ env.DEPLOY_PATH }} --strip-components=1
             rm -f /tmp/deployment.tar.gz
-            source ${{ env.DEPLOY_PATH }}/.env
             
             if [ ! -d "${{ env.VENV_PATH }}" ]; then
               python3 -m venv ${{ env.VENV_PATH }}

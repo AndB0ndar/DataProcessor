@@ -14,9 +14,14 @@ db = SQLAlchemy()
 
 
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(get_config())
-    app.static_url_path = f"{app.config['APPLICATION_ROOT']}/static"
+    config_class = get_config()
+
+    app = Flask(
+        __name__,
+        static_url_path=f"{config_class.APPLICATION_ROOT}/static"
+        static_folder=os.path.join(config_class.ROOT_PATH, 'static')
+    )
+    app.config.from_object(config_class)
     
     db.init_app(app)
 

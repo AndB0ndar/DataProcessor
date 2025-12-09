@@ -7,8 +7,12 @@ class Config:
     APP_NAME = "DataProcessor"
 
     APPLICATION_ROOT = os.environ.get('APPLICATION_ROOT', '/')
-    HOST = "0.0.0.0"
-    PORT = 5000
+    ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+    HOST = os.environ.get('HOST', "0.0.0.0")
+    PORT = os.environ.get('PORT', 5000)
+
+    DEBUG = True
 
     # Security
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
