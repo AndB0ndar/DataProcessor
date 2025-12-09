@@ -117,4 +117,3 @@ jobs:
             sudo systemctl status arbond-dataprocessor.service --no-pager -l
             sudo systemctl status nginx --no-pager -l
             echo "Deployment verification completed!"
-
