@@ -1,5 +1,6 @@
 class FileUploader {
-    constructor() {
+    constructor(url_api_update) {
+        this.url_api_update = url_api_update
         this.form = document.getElementById('uploadForm');
         this.fileInput = document.getElementById('fileInput');
         this.dropzone = document.querySelector('.file-uploader__dropzone');
@@ -232,7 +233,7 @@ class FileUploader {
         const formData = new FormData();
         this.files.forEach(file => formData.append('files', file));
         
-        const response = await fetch('/api/upload', {
+        const response = await fetch(this.url_api_update, {
             method: 'POST',
             body: formData
         });
@@ -284,7 +285,3 @@ class FileUploader {
     }
 }
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    new FileUploader();
-});

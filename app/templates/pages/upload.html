@@ -46,6 +46,11 @@
 
 {% block extra_js %}
     <script src="{{ url_for('static', filename='file-uploader/file-uploader.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            new FileUploader(`{{ url_for('api.upload') }}`);
+        });
+    </script>
 {% endblock %}
 
 {% block extra_css %}
