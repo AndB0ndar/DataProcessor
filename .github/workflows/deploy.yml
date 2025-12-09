@@ -62,7 +62,7 @@ jobs:
           source: "deployment.tar.gz"
           target: "/tmp"
     
-      - name: Deploy to production server
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SSH_HOST }}
@@ -84,7 +84,7 @@ jobs:
             pip install -r ${{ env.DEPLOY_PATH }}/requirements.txt
 
             cd ${{ env.DEPLOY_PATH }}
-            if [ ! -f .db_initialized ] || [ requirements.txt -nt .db_initialized ];
+            if [ ! -f .db_initialized ] || [ requirements.txt -nt .db_initialized ]; then
               python ${{ env.DEPLOY_PATH }}/init_db.py
               touch .db_initialized
             fi
