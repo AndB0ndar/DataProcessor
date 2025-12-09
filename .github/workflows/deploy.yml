@@ -42,18 +42,15 @@ jobs:
         run: |
           mkdir -p deployment
 
-          # We copy only the necessary files
           cp -r wsgi.py run.py requirements.txt deployment/
           cp -r app deployment/
 
-          # Creating a file for production
           cat > ${{ secrets.ENVIRONMENT_FILE }} << EOF
-          FLASK_CONFIG=production
-          APPLICATION_ROOT=/dataproc
-          SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
+            FLASK_CONFIG=production
+            APPLICATION_ROOT=/dataproc
+            SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
           EOF
           
-          # Archiving for transmission
           tar -czf deployment.tar.gz deployment/
 
       - name: Copy deployment package to server
