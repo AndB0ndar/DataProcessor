@@ -48,8 +48,8 @@ jobs:
 
           # Creating a file for production
           cat > ${{ secrets.ENVIRONMENT_FILE }} << EOF
-          FLASK_CONFIG=${{ secrets.FLASK_CONFIG }}
-          APPLICATION_ROOT=${{ secrets.APPLICATION_ROOT }}
+          FLASK_CONFIG=production
+          APPLICATION_ROOT=/dataproc
           SECRET_KEY=${{ secrets.PRODUCTION_SECRET_KEY }}
           EOF
           
