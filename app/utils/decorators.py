@@ -53,14 +53,14 @@ def run_ownership_required(f):
     return decorated_function
 
 
-def run_completed_required(f):
+def run_finished_required(f):
     """Requires a completed launch"""
     @wraps(f)
     @run_ownership_required
     def decorated_function(run_id, *args, **kwargs):
         run = Run.query.get(run_id)
         
-        if run.status != RunStatus.COMPLETED:
+        if not run.is_finished:
             flash('Run is not completed yet', 'error')
             return redirect(url_for('website.status', run_id=run_id))
         

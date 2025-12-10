@@ -15,6 +15,7 @@ class RunStatus(enum.Enum):
 
 
 class RunStage(enum.Enum):
+    NONE = '-'
     SYNTHESIS = 'synthesis'
     PLACEMENT = 'placement'
     ROUTING = 'routing'
@@ -35,7 +36,7 @@ class Run(db.Model):
     
     # Статус выполнения
     status = db.Column(db.Enum(RunStatus), default=RunStatus.PENDING)
-    current_stage = db.Column(db.Enum(RunStage))
+    current_stage = db.Column(db.Enum(RunStage), default=RunStage.NONE)
     completed_stages = db.Column(db.Text, default='[]')  # JSON список выполненных стадий
     progress = db.Column(db.Integer, default=0)  # 0-100%
     
@@ -70,7 +71,7 @@ class Run(db.Model):
     def pending_stages(self):
         all_stages = [stage for stage in RunStage]
         completed = self.completed_stages_list
-        current = self.current_stage.value if self.current_stage else None
+        current = self.current_stage.value
         
         pending = []
         for stage in all_stages:
@@ -94,11 +95,10 @@ class Run(db.Model):
         return self.status in [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED]
     
     def to_dict(self):
-        print("'current_stage':", self.current_stage.value)
         return {
             'id': self.id,
             'status': self.status.value,
-            'current_stage': self.current_stage.value if self.current_stage else None,
+            'current_stage': self.current_stage.value,
             'completed_stages': self.completed_stages_list,
             'pending_stages': self.pending_stages,
             'progress': self.progress,

@@ -45,13 +45,14 @@ class LibreLaneService:
 
     @classmethod
     def _execute_librelane(cls, run_id):
-        from app import db
         from app.models.run import Run
         
         run = Run.query.get(run_id)
         if not run:
             return
         
+        cls._active_runs[run_id] = True
+
         try:
             # Обновляем статус
             RunService.set_run_status(run_id, 'running', start_time=datetime.utcnow())
@@ -69,7 +70,7 @@ class LibreLaneService:
             completed_stages = []
             for stage, target_progress, stage_message in stages:
                 # Проверяем не отменен ли запуск
-                if not cls._active_runs.get(run_id):
+                if run_id not in cls._active_runs:
                     break
                 
                 # Обновляем текущую стадию
@@ -86,7 +87,7 @@ class LibreLaneService:
                 
                 # Имитация прогресса внутри стадии
                 for step in range(5):
-                    if not cls._active_runs.get(run_id):
+                    if run_id not in cls._active_runs:
                         break
                     
                     time.sleep(0.5)  # Имитация работы
@@ -134,7 +135,6 @@ class LibreLaneService:
 
     @classmethod
     def _librelane(cls, run_id):
-        from app import db
         from app.models.run import Run
         
         run = Run.query.get(run_id)
@@ -205,18 +205,20 @@ class LibreLaneService:
 
     @classmethod
     def submit_run(cls, run_id):
-        cls._active_runs[run_id] = True
         cls._run_queue.put(run_id)
 
     @classmethod
     def cancel_run(cls, run_id):
-        if run_id in cls._active_runs:
-            cls._active_runs[run_id] = False
-            return True
-        return False
+        from app.models.run import Run
+        
+        run = Run.query.get(run_id)
+        if not run:
+            return
+        run.status = RunStatus.CANCELLED
 
-    def cancel_run(cls, run_id):
         if run_id in cls._active_runs:
+            # FIXME
+            """
             process = cls._active_runs[run_id]
             if process and process.poll() is None:
                 try:
@@ -227,6 +229,7 @@ class LibreLaneService:
                     process.wait()
 
                 RunService.update_run_logs(run_id, log_content="Run was cancelled by user\n")
+            """
             
             cls._active_runs.pop(run_id, None)
             return True

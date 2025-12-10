@@ -9,7 +9,7 @@ from app.utils.decorators import (
     login_required, 
     no_active_run_required,
     run_ownership_required,
-    run_completed_required,
+    run_finished_required,
     run_not_completed_required
 )
 from app.services.run_service import RunService
@@ -114,7 +114,7 @@ def logs(run_id):
 @api_bp.route('/<int:run_id>/download')
 @login_required
 @run_ownership_required
-@run_completed_required
+@run_finished_required
 def download_results(run_id):
     from app.models.run import Run
     run = Run.query.get(run_id)

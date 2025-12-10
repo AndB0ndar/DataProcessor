@@ -133,17 +133,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateUI() {
         dropzoneText.textContent = files.length > 0 
-            ? `Загружено файлов: ${files.length}` 
+            ? `Загружено ${files.length} файл(ов)`
             : 'Перетащите файлы сюда или нажмите для выбора';
         
         submitBtn.disabled = files.length === 0;
         submitBtn.classList.toggle('button--disabled', files.length === 0);
         
+        /*
         if (files.length > 0) {
             showFeedback(`Загружено ${files.length} файл(ов)`, 'info');
         } else {
             hideFeedback();
         }
+        */
     }
     
     async function handleSubmit(event) {

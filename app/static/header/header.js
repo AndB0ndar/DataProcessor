@@ -48,17 +48,21 @@ class MobileMenu {
             }
         };
         
-        this.pollingInterval = setInterval(checkStatus, 5000);  // 5s
         checkStatus();
+        this.pollingInterval = setInterval(checkStatus, 3000);  // 3s
     }
     
     updateMenu() {
+        console.log('Updating menu...');
         if (this.resultsItem) {
+            console.log('Showing results item');
             this.resultsItem.classList.remove('header__item--hidden');
         }
         if (this.uploadItem) {
+            console.log('Showing upload item');
             this.uploadItem.classList.remove('header__item--hidden');
         }
+        window.location.reload();
     }
     
     stopPolling() {

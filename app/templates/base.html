@@ -12,8 +12,6 @@
     <header class="header">
         <div class="header__container">
             <a href="/" class="header__title">{{ app_name }}</span></a>
-            <p> {{ current_run }} {{current_run.is_running }}  {{current_run.is_finished }}</p>
-            <p> {{ current_run.status }}</p>
 
             {% if session.get('email') %}
             <!-- Mobile menu toggle button -->
@@ -34,13 +32,13 @@
                             Справка
                         </a>
                     </li>
-                <li class="header__item {% if current_run and not current_run.is_finished %}header__item--hidden{% endif %}"
-                    id="upload-nav-item">
-                    <a href="{{ url_for('website.upload') }}"
-                        class="header__link {% if request.endpoint == 'website.upload' %}header__link--active{% endif %}">
-                        Загрузка
-                    </a>
-                </li>
+                    <li class="header__item {% if current_run and not current_run.is_finished %}header__item--hidden{% endif %}"
+                        id="upload-nav-item">
+                        <a href="{{ url_for('website.upload') }}"
+                            class="header__link {% if request.endpoint == 'website.upload' %}header__link--active{% endif %}">
+                            Загрузка
+                        </a>
+                    </li>
                 {% if current_run %}
                     <li class="header__item">
                         <a href="{{ url_for('website.status', run_id=current_run.id) }}"

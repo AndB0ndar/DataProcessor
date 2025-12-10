@@ -105,7 +105,7 @@
 
 {% block extra_js %}
 <script>
-console.log("🚀 Инициализация мониторинга статуса для запуска {{ run.id }}");
+console.log("Инициализация мониторинга статуса для запуска {{ run.id }}");
 
 let pollInterval = null;
 let isFinished = false;
@@ -299,7 +299,7 @@ window.addEventListener('beforeunload', function() {
 window.onload = function() {
     const initialData = {
         completed_stages: {{ run.completed_stages_list | tojson }},
-        current_stage: "{{ run.current_stage.value if run.current_stage else null | tojson }}",
+        current_stage: {{ run.current_stage.value | tojson }},
         status: {{ run.status.value | tojson }},
     };
     updateStages(initialData.completed_stages, initialData.current_stage, initialData.status);
