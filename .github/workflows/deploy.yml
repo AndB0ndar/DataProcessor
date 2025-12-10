@@ -78,10 +78,8 @@ jobs:
             pip install -r ${{ secrets.DEPLOY_PATH }}/requirements.txt
 
             cd ${{ secrets.DEPLOY_PATH }}
-            if [ ! -f .db_initialized ] || [ requirements.txt -nt .db_initialized ]; then
-              python ${{ secrets.DEPLOY_PATH }}/init_db.py
-              touch .db_initialized
-            fi
+            rm -rt ${{ secrets.DEPLOY_PATH }}/instances
+            python ${{ secrets.DEPLOY_PATH }}/init_db.py
             cd -
             
             echo "Deployment files copied successfully"
