@@ -66,7 +66,7 @@ jobs:
             set -e
             echo "Starting deployment process..."
             
-            rm -rf ${{ secrets.DEPLOY_PATH }}/*
+            rm -rf ${{ secrets.DEPLOY_PATH }}
 
             tar -xzf /tmp/deployment.tar.gz -C ${{ secrets.DEPLOY_PATH }} --strip-components=1
             rm -f /tmp/deployment.tar.gz
@@ -78,7 +78,7 @@ jobs:
             pip install -r ${{ secrets.DEPLOY_PATH }}/requirements.txt
 
             cd ${{ secrets.DEPLOY_PATH }}
-            rm -rt ${{ secrets.DEPLOY_PATH }}/instances
+            rm -rf ${{ secrets.DEPLOY_PATH }}/instances
             python ${{ secrets.DEPLOY_PATH }}/init_db.py
             cd -
             
