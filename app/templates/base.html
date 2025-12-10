@@ -11,7 +11,7 @@
     <!-- Header -->
     <header class="header">
         <div class="header__container">
-            <a href="/" class="header__title">{{ app_name }}</span></a>
+            <a href="{{ url_for('website.help') }}" class="header__title">{{ app_name }}</span></a>
 
             {% if session.get('email') %}
             <!-- Mobile menu toggle button -->
