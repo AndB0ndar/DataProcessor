@@ -14,10 +14,10 @@
             <p class="main__description">Выберите JSON-файл с данными для анализа</p>
         </div>
         <div class="main__sections">
-            <form method="POST" enctype="multipart/form-data" id="uploadForm" class="file-uploader">
+            <form method="POST" enctype="multipart/form-data" id="uploadForm" class="file-uploader" novalidate>
                 <div class="file-uploader__wrapper">
                     <input class="file-uploader__input" type="file" id="fileInput" name="files" 
-                           accept=".json,.yaml,.yml,.conf,.v,.vh,.sv" multiple required>
+                           accept=".json,.yaml,.yml,.conf,.v,.vh,.sv" multiple novalidate>
                     <label class="file-uploader__dropzone" for="fileInput">
                         <div class="file-uploader__icon">📁⚙️</div>
                         <div class="file-uploader__prompt" id="dropzoneText">Перетащите файлы сюда или нажмите для выбора</div>
@@ -45,14 +45,169 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{{ url_for('static', filename='file-uploader/file-uploader.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            new FileUploader(`{{ url_for('api.upload') }}`);
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.querySelector('.file-uploader__dropzone');
+    const preview = document.getElementById('filePreview');
+    const feedback = document.getElementById('feedback');
+    const submitBtn = document.getElementById('submitBtn');
+    const dropzoneText = document.getElementById('dropzoneText');
+    
+    const UPLOAD_URL = "{{ url_for('api.upload') }}";
+    const STATUS_PATH_TEMPLATE = "{{ url_for('website.status', run_id=0) }}";
+    const BASE_STATUS_PATH = STATUS_PATH_TEMPLATE.replace('/0', '');
+    
+    let files = [];
+    
+    fileInput.addEventListener('change', handleFileSelect);
+    dropzone.addEventListener('dragover', handleDragOver);
+    dropzone.addEventListener('drop', handleDrop);
+    form.addEventListener('submit', handleSubmit);
+    
+    // handlers
+    function handleFileSelect(event) {
+        const newFiles = Array.from(event.target.files);
+        processFiles(newFiles);
+    }
+    
+    function handleDragOver(event) {
+        event.preventDefault();
+        dropzone.classList.add('file-uploader__dropzone--dragover');
+    }
+    
+    function handleDrop(event) {
+        event.preventDefault();
+        dropzone.classList.remove('file-uploader__dropzone--dragover');
+        const newFiles = Array.from(event.dataTransfer.files);
+        processFiles(newFiles);
+    }
+    
+    function processFiles(newFiles) {
+        files = [...files, ...newFiles];
+        updatePreview();
+        updateUI();
+
+        fileInput.value = '';
+    }
+    
+    function updatePreview() {
+        if (files.length === 0) {
+            preview.innerHTML = '';
+            preview.classList.remove('file-uploader__preview--visible');
+            return;
+        }
+        
+        preview.innerHTML = files.map((file, index) => `
+            <div class="file-uploader__details">
+                <span class="file-uploader__filename">${file.name}</span>
+                <button type="button" class="button button--ghost button--icon-only file-uploader__remove" 
+                        data-index="${index}" aria-label="Удалить файл">
+                    <span class="button__icon">✕</span>
+                </button>
+            </div>
+            <div class="file-uploader__meta">
+                ${formatFileSize(file.size)}
+            </div>
+        `).join('');
+        
+        preview.classList.add('file-uploader__preview--visible');
+        
+        // Add handler for remove button
+        preview.querySelectorAll('.file-uploader__remove').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const index = parseInt(e.target.closest('button').dataset.index);
+                removeFile(index);
+            });
         });
-    </script>
-{% endblock %}
+    }
+    
+    function removeFile(index) {
+        files.splice(index, 1);
+        updatePreview();
+        updateUI();
 
-{% block extra_css %}
+        fileInput.value = '';
+    }
+    
+    function updateUI() {
+        dropzoneText.textContent = files.length > 0 
+            ? `Загружено файлов: ${files.length}` 
+            : 'Перетащите файлы сюда или нажмите для выбора';
+        
+        submitBtn.disabled = files.length === 0;
+        submitBtn.classList.toggle('button--disabled', files.length === 0);
+        
+        if (files.length > 0) {
+            showFeedback(`Загружено ${files.length} файл(ов)`, 'info');
+        } else {
+            hideFeedback();
+        }
+    }
+    
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        if (files.length === 0) {
+            showFeedback('Пожалуйста, загрузите файлы', 'error');
+            return;
+        }
+        
+        try {
+            setLoadingState(true);
+            
+            const formData = new FormData();
+            files.forEach(file => formData.append('files', file));
+            
+            const response = await fetch(UPLOAD_URL, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showFeedback('Файлы загружены! Перенаправляем...', 'success');
+                
+                const redirectUrl = `${BASE_STATUS_PATH}/${data.run_id}`;
+                window.location.href = redirectUrl;
+            } else {
+                throw new Error(data.error || 'Ошибка при загрузке файлов');
+            }
+        } catch (error) {
+            showFeedback(`Ошибка: ${error.message}`, 'error');
+            setLoadingState(false);
+        }
+    }
+    
+    function setLoadingState(loading) {
+        if (loading) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Загрузка и проверка файлов...';
+        } else {
+            updateUI();
+            submitBtn.textContent = 'Запустить обработку данных';
+        }
+    }
+    
+    function showFeedback(message, type) {
+        feedback.textContent = message;
+        feedback.className = `file-uploader__feedback file-uploader__feedback--${type}`;
+        feedback.style.display = 'block';
+    }
+    
+    function hideFeedback() {
+        feedback.style.display = 'none';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
 {% endblock %}
-

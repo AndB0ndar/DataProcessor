@@ -32,14 +32,21 @@ def upload():
         
         config_files = []
         source_files = []
+
         for file in uploaded_files:
             if not file.filename:
                 continue
+
             filename_lower = file.filename.lower()
             if any(filename_lower.endswith(ext) for ext in ['.json', '.yaml', '.yml', '.conf']):
                 config_files.append(file)
             elif any(filename_lower.endswith(ext) for ext in ['.v', '.vh', '.sv']):
                 source_files.append(file)
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'Неподдерживаемый формат файла: {file.filename}'
+                }), 400
         
         from app.services.validation_service import FileValidationService
         is_valid, validation_result = FileValidationService.validate_upload(
@@ -56,11 +63,8 @@ def upload():
             logging.warning(f"File upload warnings: {validation_result['warnings']}")
         
 
-        # TODO: move to /api/run
         run = RunService.create_run(session['session_id'], session['email'])
         
-        active_run = RunService.get_active_run(session['session_id'])
-
         config_file = config_files[0]
         if RunService.save_uploaded_files(run.id, config_file, source_files):
             LibreLaneService.submit_run(run.id)

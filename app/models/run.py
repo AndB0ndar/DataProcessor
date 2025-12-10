@@ -1,7 +1,9 @@
-from app import db
-from datetime import datetime
 import enum
 import json
+
+from datetime import datetime
+
+from app import db
 
 
 class RunStatus(enum.Enum):
@@ -87,34 +89,9 @@ class Run(db.Model):
         return self.status == RunStatus.RUNNING
     
     @property
-    def is_pending(self):
-        """Запуск ожидает"""
-        return self.status == RunStatus.PENDING
-    
-    @property
-    def is_active(self):
-        """Активный запуск (выполняется или ожидает) - КЛЮЧЕВОЕ СВОЙСТВО"""
-        return self.status in [RunStatus.PENDING, RunStatus.RUNNING]
-    
-    @property
     def is_finished(self):
         """Запуск завершен (успешно или с ошибкой)"""
         return self.status in [RunStatus.COMPLETED, RunStatus.FAILED, RunStatus.CANCELLED]
-    
-    @property
-    def is_successful(self):
-        """Запуск успешно завершен"""
-        return self.status == RunStatus.COMPLETED
-    
-    @property
-    def is_failed(self):
-        """Запуск завершен с ошибкой"""
-        return self.status == RunStatus.FAILED
-    
-    @property
-    def is_cancelled(self):
-        """Запуск отменен"""
-        return self.status == RunStatus.CANCELLED
     
     def to_dict(self):
         print("'current_stage':", self.current_stage.value)
@@ -129,6 +106,7 @@ class Run(db.Model):
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'duration': str(self.duration) if self.duration else None,
             'log_content': self.log_content,
-            'is_finished': self.is_finished
+            'is_finished': self.is_finished,
+            'is_running': self.is_running
         }
 

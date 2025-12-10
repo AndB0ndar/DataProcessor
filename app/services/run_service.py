@@ -37,28 +37,24 @@ class RunService:
         if not run:
             return False
         
-        # Создаем папку для загрузок
         project_dir = RunService.get_project_folder(run_id)
         os.makedirs(project_dir, exist_ok=True)
 
         try:
-        
-            # Сохраняем конфигурационный файл
             config_filename = secure_filename(config_file.filename)
             config_path = os.path.join(project_dir, config_filename)
             config_file.save(config_path)
             
-            # Сохраняем исходники (файл или архив)
             source_filenames = []
             for source_file in source_files:
                 source_filename = secure_filename(source_file.filename)
                 source_path = os.path.join(project_dir, source_filename)
                 source_file.save(source_path)
                 source_filenames.append(source_filename)
-            
-            # Обновляем запись в базе
+
+            # FIXME: save path to rtl dir
             run.config_filename = config_filename
-            run.sources_filenames = json.dumps(source_filenames)  # FIXME: save path to rtl dir
+            run.sources_filenames = json.dumps(source_filenames)
             db.session.commit()
             
             logger.info(f"Saved files for run {run_id}: config={config_filename}, sources={source_filenames}")
@@ -96,7 +92,7 @@ class RunService:
             return None
         
         if log_content is not None:
-            # Добавляем timestamp к логам
+            # FIXME
             timestamp = datetime.utcnow().strftime('%H:%M:%S')
             formatted_output = f"[{timestamp}] {log_content}"
             
@@ -188,3 +184,4 @@ class RunService:
         if limit:
             query = query.limit(limit)
         return query.all()
+
